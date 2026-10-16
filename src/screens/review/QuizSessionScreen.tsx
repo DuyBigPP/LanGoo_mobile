@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { CheckCircle2, XCircle } from "lucide-react-native";
 import { ApiError } from "@/api/client";
@@ -28,7 +28,7 @@ import {
 import { useLookupSheet } from "@/hooks/use-lookup-sheet";
 import { useT } from "@/i18n";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QuizSession">;
 
@@ -127,10 +127,10 @@ export function QuizSessionScreen({ navigation, route }: Props) {
       <Screen
         title={t("review.sessionTitle")}
         onBack={() => navigation.goBack()}
-        contentStyle={styles.content}
+        contentClassName="gap-3"
         testID="quiz-session"
       >
-        <View style={styles.loading}>
+        <View className="gap-3">
           <Skeleton height={20} width="40%" />
           <Skeleton height={140} />
         </View>
@@ -143,10 +143,10 @@ export function QuizSessionScreen({ navigation, route }: Props) {
       <Screen
         title={t("review.sessionTitle")}
         onBack={() => navigation.goBack()}
-        contentStyle={styles.content}
+        contentClassName="gap-3"
         testID="quiz-session"
       >
-        <Card style={styles.errorCard}>
+        <Card className="gap-2">
           <AppText variant="body" center>
             {t("review.cantLoad")}
           </AppText>
@@ -155,7 +155,7 @@ export function QuizSessionScreen({ navigation, route }: Props) {
             variant="outline"
             size="sm"
             onPress={() => navigation.goBack()}
-            style={styles.retry}
+            className="self-center"
             testID="quiz-back"
           />
         </Card>
@@ -198,11 +198,11 @@ export function QuizSessionScreen({ navigation, route }: Props) {
         </AppText>
       }
       scroll
-      contentStyle={styles.content}
+      contentClassName="gap-3"
       testID="quiz-session"
     >
-      <View style={styles.headerRow}>
-        <AppText variant="caption" style={styles.headerNote}>
+      <View className="flex-row items-center justify-between gap-2">
+        <AppText variant="caption" className="shrink">
           {t("review.quizNoSchedule")}
         </AppText>
         {!settled ? (
@@ -231,8 +231,8 @@ export function QuizSessionScreen({ navigation, route }: Props) {
             />
 
             {feedback ? (
-              <View style={styles.feedback} testID="quiz-feedback">
-                <View style={styles.feedbackRow}>
+              <View className="mt-4 gap-2" testID="quiz-feedback">
+                <View className="flex-row items-center gap-1">
                   {feedback.isCorrect ? (
                     <CheckCircle2 size={18} color={theme.colors.success} />
                   ) : (
@@ -263,7 +263,7 @@ export function QuizSessionScreen({ navigation, route }: Props) {
             ) : null}
           </>
         ) : (
-          <AppText variant="caption" center style={styles.preparing}>
+          <AppText variant="caption" center className="py-4">
             {t("review.preparing")}
           </AppText>
         )}
@@ -274,20 +274,3 @@ export function QuizSessionScreen({ navigation, route }: Props) {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { gap: spacing.md },
-  loading: { gap: spacing.md },
-  errorCard: { gap: spacing.sm },
-  retry: { alignSelf: "center" },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  headerNote: { flexShrink: 1 },
-  feedback: { gap: spacing.sm, marginTop: spacing.lg },
-  feedbackRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-  preparing: { paddingVertical: spacing.lg },
-});

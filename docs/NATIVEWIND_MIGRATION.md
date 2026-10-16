@@ -20,7 +20,7 @@
 | `text` | `text-foreground` |
 | `textMuted` | `text-muted-foreground` |
 | `textFaint` | `text-text-faint` |
-| `danger` / `dangerSoft` | `bg-destructive` / `bg-destructive/15` |
+| `danger` / `dangerSoft` | `bg-destructive` / `bg-danger-soft` |
 | `success` | `text-success` / `bg-success` |
 | `warning` | `text-warning` / `bg-warning` |
 | `highlight` | `bg-highlight` |
@@ -30,7 +30,8 @@
 | Token cũ | class |
 | --- | --- |
 | `spacing.xs/sm/md/lg/xl/xxl` (4/8/12/16/20/28) | `1 / 2 / 3 / 4 / 5 / 7` (vd `p-3`, `gap-2`, `mt-4`) |
-| `radius.sm/md/lg/xl/pill` (8/12/16/20/999) | `rounded-lg / rounded-xl / rounded-2xl / rounded-[20px] / rounded-full` |
+| `radius.sm/md/lg/xl/pill` (8/10/12/16/999) | `rounded-sm / rounded-md / rounded-lg / rounded-xl / rounded-full` |
+| `StyleSheet.hairlineWidth` | `border-hairline` / `border-t-hairline` / `border-b-hairline` / `border-l-hairline` |
 | `fontSize.xs/sm/md/lg/xl/xxl/hero` (11/13/15/17/20/28/40) | `text-xs / text-sm / text-base / text-lg / text-xl / text-2xl / text-hero` |
 | `fontWeight.regular/medium/semibold/bold` | `font-normal / font-medium / font-semibold / font-bold` |
 
@@ -47,6 +48,14 @@
 - **testID giữ nguyên 100%** (e2e/kiểm tra trên máy dựa vào chúng).
 - Component Reusables nằm ở `src/components/ui/` (Button/Card/Dialog/Select/Tabs/Switch/Tooltip/
   Progress/Skeleton/Avatar/Badge/Input/Label/Checkbox/Separator/Text…) — dùng trực tiếp, không tự viết lại.
+
+## 2b. Trạng thái (16/10/2026)
+
+- Đã chuyển toàn bộ `StyleSheet.create` sang `className` (≈60 file). Còn giữ style object có chủ đích:
+  `ChatMarkdown` (thư viện markdown nhận style object), mặt thẻ lật `FlashcardScreen` + chấm `ThinkingDots`
+  (`Animated`), kích thước đo lúc chạy (`InkCanvas`, `SessionsSheet` maxHeight, `OfflineBanner` inset), `textAlignVertical`.
+- Component dùng chung (`Card`, `Button`, `Chip`, `IconButton`, `Skeleton`, `Input`, `WordCell`, `SegmentedControl`…) nhận `className`
+  (ghép bằng `cn`); `Screen` nhận `contentClassName` (đè `p-4` mặc định, vd `p-0`).
 
 ## 3. Reusables — thành phần đã copy về
 

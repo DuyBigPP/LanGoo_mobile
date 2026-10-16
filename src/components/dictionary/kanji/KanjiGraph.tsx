@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
+import { View, type LayoutChangeEvent } from "react-native";
 import Svg, { Circle, G, Line, Text as SvgText } from "react-native-svg";
 import { useT } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -98,7 +98,7 @@ export function KanjiGraph({ literal, components, radical, onOpenKanji }: KanjiG
   return (
     <View
       onLayout={handleLayout}
-      style={[styles.box, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}
+      className="min-h-[120px] overflow-hidden rounded-lg border border-border bg-card"
       accessibilityLabel={t("dict.graphTitle", { literal })}
       testID="kanji-graph"
     >
@@ -171,7 +171,3 @@ export function KanjiGraph({ literal, components, radical, onOpenKanji }: KanjiG
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  box: { borderWidth: 1, borderRadius: 12, overflow: "hidden", minHeight: 120 },
-});

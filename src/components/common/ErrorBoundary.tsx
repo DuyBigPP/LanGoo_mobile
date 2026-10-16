@@ -1,18 +1,16 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { AppText } from "@/components/ui/Text";
 import { translate } from "@/i18n";
-import { useTheme } from "@/theme";
 
 interface State {
   error: Error | null;
 }
 
 function CrashFallback({ error, onRetry }: { error: Error; onRetry: () => void }) {
-  const theme = useTheme();
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
       <AppText variant="title" center>
         {translate("errors.crashTitle")}
       </AppText>
@@ -43,7 +41,3 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
     return this.props.children;
   }
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16, padding: 24 },
-});

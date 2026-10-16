@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Linking, StyleSheet, View } from "react-native";
+import { Linking, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Check, Copy, ExternalLink } from "lucide-react-native";
 import {
@@ -16,7 +16,7 @@ import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
 import { copyText } from "@/lib/clipboard";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SourceDto, SourceUsageDto } from "@/types/api";
 
 type SourcesScreenProps = NativeStackScreenProps<RootStackParamList, "Sources">;
@@ -46,22 +46,22 @@ export function SourcesScreen({ navigation }: SourcesScreenProps) {
       scroll
       onRefresh={() => void sources.refetch()}
       refreshing={sources.isRefetching}
-      contentStyle={styles.content}
+      contentClassName="gap-4"
       testID="sources-screen"
     >
       <AppText variant="caption">{t("sources.hint")}</AppText>
 
       {sources.isPending ? (
-        <Card style={styles.card}>
+        <Card className="gap-3">
           {[0, 1, 2].map(index => (
-            <View key={index} style={styles.skeletonRow}>
+            <View key={index} className="gap-2">
               <Skeleton height={16} width="50%" />
               <Skeleton height={12} width="80%" />
             </View>
           ))}
         </Card>
       ) : sources.isError ? (
-        <Card style={styles.card}>
+        <Card className="gap-3">
           <AppText variant="caption" center>
             {t("errors.generic")}
           </AppText>
@@ -70,12 +70,12 @@ export function SourcesScreen({ navigation }: SourcesScreenProps) {
             variant="outline"
             size="sm"
             onPress={() => void sources.refetch()}
-            style={styles.retry}
+            className="self-center"
             testID="sources-retry"
           />
         </Card>
       ) : (
-        <View style={styles.list}>
+        <View className="gap-2">
           {(sources.data?.data ?? []).map(source => (
             <SourceCard key={source.id} source={source} />
           ))}
@@ -121,8 +121,8 @@ function SourceCard({ source }: { source: SourceDto }) {
 
   return (
     <Card testID={`source-${source.code}`}>
-      <View style={styles.sourceHeader}>
-        <AppText variant="body" weight="semibold" style={styles.sourceName}>
+      <View className="flex-row flex-wrap items-center gap-2">
+        <AppText variant="body" weight="semibold" className="shrink">
           {source.name}
         </AppText>
         {source.license ? <Chip>{source.license}</Chip> : null}
@@ -137,7 +137,7 @@ function SourceCard({ source }: { source: SourceDto }) {
         <AppText variant="caption">{usageParts.join(" · ")}</AppText>
       ) : null}
 
-      <View style={styles.sourceActions}>
+      <View className="flex-row flex-wrap items-center gap-2">
         {source.url ? (
           <Button
             label={t("sources.visit")}
@@ -166,24 +166,3 @@ function SourceCard({ source }: { source: SourceDto }) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { gap: spacing.lg },
-  card: { gap: spacing.md },
-  list: { gap: spacing.sm },
-  skeletonRow: { gap: spacing.sm },
-  retry: { alignSelf: "center" },
-  sourceHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  sourceName: { flexShrink: 1 },
-  sourceActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-});

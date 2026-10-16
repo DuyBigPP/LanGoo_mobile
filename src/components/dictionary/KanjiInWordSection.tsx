@@ -1,10 +1,10 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { ArrowRight } from "lucide-react-native";
 import { AppText, Card, Divider, SectionHeader } from "@/components/ui";
 import { useKanji } from "@/hooks/use-dictionary";
 import { useT } from "@/i18n";
 import { kanjiReadings } from "@/lib/kanji";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 export interface KanjiInWordSectionProps {
   /** Từ đang xem — dùng cho tiêu đề "Chữ Hán trong {surface}" */
@@ -25,7 +25,7 @@ export function KanjiInWordSection({ surface, chars, onOpenKanji }: KanjiInWordS
   if (chars.length === 0) return null;
 
   return (
-    <View style={styles.section} testID="kanji-of-word">
+    <View className="gap-2" testID="kanji-of-word">
       <SectionHeader title={t("dict.kanjiIn", { surface })} />
       <Card padded={false}>
         {chars.map((char, index) => (
@@ -53,18 +53,13 @@ function KanjiInWordRow({ literal, onOpen }: { literal: string; onOpen: () => vo
   ].filter((value): value is string => Boolean(value));
 
   return (
-    <View style={styles.row} testID={`kanji-in-word-${literal}`}>
-      <View
-        style={[
-          styles.charBox,
-          { borderColor: theme.colors.border, backgroundColor: theme.colors.background },
-        ]}
-      >
+    <View className="flex-row items-start gap-3 p-3" testID={`kanji-in-word-${literal}`}>
+      <View className="h-12 w-12 items-center justify-center rounded-md border border-border bg-background">
         <AppText size="xl" weight="semibold">
           {literal}
         </AppText>
       </View>
-      <View style={styles.flex}>
+      <View className="flex-1">
         {readings.vietnam.length > 0 ? (
           <AppText variant="body" weight="semibold" numberOfLines={1}>
             {`「${readings.vietnam.join(", ")}」`}
@@ -80,7 +75,7 @@ function KanjiInWordRow({ literal, onOpen }: { literal: string; onOpen: () => vo
           accessibilityRole="button"
           accessibilityLabel={t("dict.seeMore")}
           testID={`kanji-in-word-open-${literal}`}
-          className="active:opacity-70" style={styles.openLink}
+          className="mt-1 flex-row items-center gap-1 active:opacity-70"
         >
           <AppText variant="caption" color="primary" weight="medium">
             {t("dict.seeMore")}
@@ -91,19 +86,3 @@ function KanjiInWordRow({ literal, onOpen }: { literal: string; onOpen: () => vo
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { gap: spacing.sm },
-  flex: { flex: 1 },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md, padding: spacing.md },
-  charBox: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-  openLink: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
-  pressed: { opacity: 0.7 },
-});

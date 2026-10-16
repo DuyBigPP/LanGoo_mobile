@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ScrollView, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { X } from "lucide-react-native";
@@ -23,7 +23,7 @@ import { kanjiMeaningsEn, kanjiReadings } from "@/lib/kanji";
 import { hasKanji } from "@/lib/furigana";
 import { isSingleKanji } from "@/lib/lang";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SearchHitDto } from "@/types/dictionary";
 
 export interface LookupSheetProps {
@@ -130,15 +130,15 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
 
   return (
     <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.body}
+      className="shrink"
+      contentContainerClassName="gap-3 pb-3"
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       {/* Đầu phiếu: chữ đang tra + loa đọc + nút đóng */}
-      <View style={styles.header}>
+      <View className="flex-row items-center gap-1">
         {furigana.status === "done" && hasKanji(query) ? (
-          <View style={styles.flex} testID="lookup-query">
+          <View className="flex-1" testID="lookup-query">
             <FuriganaText segments={furigana.segments} size={24} />
           </View>
         ) : (
@@ -146,7 +146,7 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
             size="xxl"
             weight="bold"
             numberOfLines={1}
-            style={styles.flex}
+            className="flex-1"
             testID="lookup-query"
           >
             {query}
@@ -165,12 +165,12 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
 
       {/* Thẻ chữ Hán gọn — hiện trước, không chặn kết quả từ điển bên dưới */}
       {singleKanji ? (
-        <Card style={styles.kanjiCard} testID="lookup-kanji">
-          <View style={styles.kanjiRow}>
+        <Card className="gap-2" testID="lookup-kanji">
+          <View className="flex-row items-center gap-3">
             <AppText size="xxl" weight="semibold">
               {query}
             </AppText>
-            <View style={styles.kanjiInfo}>
+            <View className="flex-1 gap-0.5">
               {kanji.isPending ? (
                 <>
                   <Skeleton height={12} width="60%" />
@@ -209,13 +209,13 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
 
       {/* Kết quả từ điển */}
       {search.isPending ? (
-        <View style={styles.stateRow} testID="lookup-loading">
+        <View className="min-h-[32px] flex-row items-center gap-2" testID="lookup-loading">
           <ActivityIndicator size="small" color={theme.colors.primary} />
           <AppText variant="caption">{t("dict.lookupSearching")}</AppText>
         </View>
       ) : search.isError ? (
-        <View style={styles.stateRow} testID="lookup-error">
-          <AppText variant="caption" style={styles.flex}>
+        <View className="min-h-[32px] flex-row items-center gap-2" testID="lookup-error">
+          <AppText variant="caption" className="flex-1">
             {t("dict.lookupConnectError")}
           </AppText>
           <Button
@@ -228,7 +228,7 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
           />
         </View>
       ) : hits.length > 0 ? (
-        <View style={styles.results}>
+        <View className="gap-2">
           {hits.map((hit, index) => (
             <LookupResultRow
               key={`${hit.lexeme_id}-${hit.homograph_no ?? 0}-${index}`}
@@ -240,7 +240,7 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
           ))}
         </View>
       ) : (
-        <View style={styles.results}>
+        <View className="gap-2">
           <AppText variant="caption" testID="lookup-empty">
             {t("dict.lookupNotFound", { query })}
           </AppText>
@@ -257,13 +257,13 @@ function LookupTranslation({ query }: { query: string }) {
   const translation = useTranslation(query, true);
 
   return (
-    <Card style={styles.kanjiCard} testID="lookup-translation">
+    <Card className="gap-2" testID="lookup-translation">
       <AppText variant="label">{t("dict.lookupTranslationTitle")}</AppText>
       {translation.status === "loading" ? (
         <AppText variant="caption">{t("dict.lookupTranslating")}</AppText>
       ) : translation.status === "error" ? (
-        <View style={styles.stateRow}>
-          <AppText variant="caption" color="danger" style={styles.flex}>
+        <View className="min-h-[32px] flex-row items-center gap-2">
+          <AppText variant="caption" color="danger" className="flex-1">
             {t("dict.lookupTranslateError")}
           </AppText>
           <Button label={t("common.retry")} variant="outline" size="sm" onPress={translation.refetch} />
@@ -293,17 +293,17 @@ function LookupResultRow({ hit, index, onOpen, onAdd }: LookupResultRowProps) {
   const gloss = first?.gloss_vi ?? first?.gloss_en ?? first?.definition ?? null;
 
   return (
-    <Card onPress={onOpen} testID={`lookup-result-${index}`} style={styles.resultCard}>
-      <View style={styles.resultTop}>
+    <Card onPress={onOpen} testID={`lookup-result-${index}`} className="gap-1 p-3">
+      <View className="flex-row items-center gap-2">
         <AppText size="lg" weight="semibold" numberOfLines={1}>
           {hit.surface}
         </AppText>
         {hit.reading && hit.reading !== hit.surface ? (
-          <AppText variant="caption" numberOfLines={1} style={styles.flex}>
+          <AppText variant="caption" numberOfLines={1} className="flex-1">
             {hit.reading}
           </AppText>
         ) : (
-          <View style={styles.flex} />
+          <View className="flex-1" />
         )}
         <Button
           label={t("dict.lookupAdd")}
@@ -327,17 +327,3 @@ function LookupResultRow({ hit, index, onOpen, onAdd }: LookupResultRowProps) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flexShrink: 1 },
-  body: { gap: spacing.md, paddingBottom: spacing.md },
-  flex: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-  kanjiCard: { gap: spacing.sm },
-  kanjiRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  kanjiInfo: { flex: 1, gap: 2 },
-  stateRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 32 },
-  results: { gap: spacing.sm },
-  resultCard: { gap: spacing.xs, padding: spacing.md },
-  resultTop: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-});

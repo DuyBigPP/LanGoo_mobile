@@ -1,9 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { KanjiDetailContent } from "@/components/dictionary/KanjiDetailContent";
 import { AppText } from "@/components/ui";
 import { useT } from "@/i18n";
-import { spacing, useTheme } from "@/theme";
 
 export interface SenseKanjiTabProps {
   /** Các chữ Hán có trong từ. */
@@ -16,15 +16,14 @@ export interface SenseKanjiTabProps {
 /** Tab Hán tự: chọn chữ (khi có nhiều chữ) + chi tiết chữ Hán đang chọn. */
 export function SenseKanjiTab({ chars, active, onSelect, onSearchWords }: SenseKanjiTabProps) {
   const t = useT();
-  const theme = useTheme();
 
   return (
     <>
       {/* Nhiều chữ Hán -> cho chọn chữ đang xem (như web) */}
       {chars.length > 1 ? (
-        <View style={styles.picker}>
+        <View className="gap-2">
           <AppText variant="caption">{t("dict.chooseKanji")}</AppText>
-          <View style={styles.pickerRow}>
+          <View className="flex-row flex-wrap items-center gap-2">
             {chars.map(char => {
               const selected = active === char;
               return (
@@ -34,18 +33,15 @@ export function SenseKanjiTab({ chars, active, onSelect, onSearchWords }: SenseK
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   testID={`sense-kanji-${char}`}
-                  style={[
-                    styles.choice,
-                    {
-                      borderColor: selected ? theme.colors.primary : theme.colors.border,
-                      backgroundColor: selected ? theme.colors.primary : theme.colors.background,
-                    },
-                  ]}
+                  className={cn(
+                    "h-11 w-11 items-center justify-center rounded-md border-[1.5px]",
+                    selected ? "border-primary bg-primary" : "border-border bg-background",
+                  )}
                 >
                   <AppText
                     size="lg"
                     weight="semibold"
-                    style={{ color: selected ? theme.colors.onPrimary : theme.colors.text }}
+                    color={selected ? "onPrimary" : "default"}
                   >
                     {char}
                   </AppText>
@@ -60,16 +56,3 @@ export function SenseKanjiTab({ chars, active, onSelect, onSearchWords }: SenseK
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  picker: { gap: spacing.sm },
-  pickerRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  choice: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    borderRadius: 10,
-  },
-});

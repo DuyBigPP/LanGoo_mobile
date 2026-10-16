@@ -1,10 +1,10 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Bot, Copy } from "lucide-react-native";
 import { SpeakButton } from "@/components/domain/SpeakButton";
 import { AppText, Badge, Button, Chip } from "@/components/ui";
 import { useT } from "@/i18n";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SenseCardDto } from "@/types/dictionary";
 
 export interface SenseHeaderProps {
@@ -24,14 +24,14 @@ export function SenseHeader({ surface, card, vietnamReadings, pos, onAskAi, onCo
   const theme = useTheme();
 
   return (
-    <View style={styles.header}>
-      <View style={styles.top}>
-        <AppText size="xxl" weight="bold" numberOfLines={2} style={styles.surface}>
+    <View className="gap-2">
+      <View className="flex-row items-center gap-2">
+        <AppText size="xxl" weight="bold" numberOfLines={2} className="flex-1">
           {surface}
         </AppText>
         <SpeakButton text={surface} lang="ja" />
       </View>
-      <View style={styles.meta}>
+      <View className="flex-row flex-wrap items-center gap-2">
         {card?.reading && card.reading !== surface ? (
           <AppText variant="caption">{card.reading}</AppText>
         ) : null}
@@ -48,7 +48,7 @@ export function SenseHeader({ surface, card, vietnamReadings, pos, onAskAi, onCo
         {card?.gloss_vi_reviewed ? <Badge>{t("dict.reviewed")}</Badge> : null}
       </View>
       {/* Hành động như web: hỏi trợ lý AI kèm nghĩa đang xem, sao chép mặt chữ */}
-      <View style={styles.actions}>
+      <View className="flex-row flex-wrap items-center gap-2">
         <Button
           label={t("dict.askAi")}
           icon={<Bot size={16} color={theme.colors.text} />}
@@ -71,11 +71,3 @@ export function SenseHeader({ surface, card, vietnamReadings, pos, onAskAi, onCo
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: { gap: spacing.sm },
-  top: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  surface: { flex: 1 },
-  meta: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  actions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-});

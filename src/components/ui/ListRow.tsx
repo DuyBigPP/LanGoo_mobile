@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
 import { AppText } from "./Text";
 
@@ -10,6 +11,7 @@ export interface ListRowProps {
   onPress?: () => void;
   testID?: string;
   style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 const ROW_CLASS = "min-h-14 flex-row items-center gap-3 px-4 py-3";
@@ -19,7 +21,7 @@ const ROW_CLASS = "min-h-14 flex-row items-center gap-3 px-4 py-3";
  * `left` (icon) luôn nằm trước tiêu đề, `right` (badge + mũi tên) nằm cuối hàng;
  * hai ô này `shrink-0` + canh giữa dọc để tiêu đề dài không đẩy lệch icon/mũi tên.
  */
-export function ListRow({ title, subtitle, left, right, onPress, testID, style }: ListRowProps) {
+export function ListRow({ title, subtitle, left, right, onPress, testID, style, className }: ListRowProps) {
   const content = (
     <>
       {left ? (
@@ -43,7 +45,7 @@ export function ListRow({ title, subtitle, left, right, onPress, testID, style }
 
   if (!onPress) {
     return (
-      <View className={ROW_CLASS} style={style} testID={testID}>
+      <View className={cn(ROW_CLASS, className)} style={style} testID={testID}>
         {content}
       </View>
     );
@@ -55,7 +57,7 @@ export function ListRow({ title, subtitle, left, right, onPress, testID, style }
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={title}
-      className={`${ROW_CLASS} active:bg-primary-soft`}
+      className={cn(ROW_CLASS, "active:bg-primary-soft", className)}
       style={style}
     >
       {content}

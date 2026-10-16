@@ -1,11 +1,10 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { SpeakButton } from "@/components/domain/SpeakButton";
 import { AppText, Badge, Card, Chip, Flag, Skeleton } from "@/components/ui";
 import { useLexemeSenses } from "@/hooks/use-dictionary";
 import { useT } from "@/i18n";
 import { posLabel, surfaceKindLabel } from "@/lib/dictionary-labels";
-import { spacing } from "@/theme";
 import type { SearchHitDto } from "@/types/dictionary";
 
 export interface ResultRowProps {
@@ -28,10 +27,10 @@ export function ResultRow({ hit, testID, onPress }: ResultRowProps) {
   const homograph = hit.homograph_no != null && hit.homograph_no > 1 ? hit.homograph_no : null;
 
   return (
-    <Card onPress={onPress} testID={testID} style={styles.card}>
-      <View style={styles.top}>
+    <Card onPress={onPress} testID={testID} className="gap-2">
+      <View className="flex-row flex-wrap items-center gap-2">
         <Flag code="jp" size="sm" />
-        <AppText size="lg" weight="semibold" numberOfLines={1} style={styles.surface}>
+        <AppText size="lg" weight="semibold" numberOfLines={1} className="shrink">
           {hit.surface}
         </AppText>
         {hit.reading && hit.reading !== hit.surface ? (
@@ -47,12 +46,12 @@ export function ResultRow({ hit, testID, onPress }: ResultRowProps) {
           </AppText>
         ) : null}
         {/* Loa đọc mặt chữ — đẩy về bên phải dòng (như bản web) */}
-        <View style={styles.speak}>
+        <View className="ml-auto">
           <SpeakButton text={hit.surface} lang="ja" size="sm" />
         </View>
       </View>
       {reviewed ? (
-        <View style={styles.badgeRow}>
+        <View className="flex-row items-center gap-1">
           <Badge tone="success">{t("dict.reviewed")}</Badge>
         </View>
       ) : null}
@@ -65,7 +64,7 @@ export function ResultRow({ hit, testID, onPress }: ResultRowProps) {
       ) : null}
       {/* Tần suất · đồng âm · loại mặt chữ */}
       {hit.frequency_rank != null || homograph != null || kind ? (
-        <View style={styles.meta}>
+        <View className="flex-row flex-wrap items-center gap-3">
           {hit.frequency_rank != null ? (
             <AppText variant="caption" size="xs">
               {t("dict.frequency", { rank: hit.frequency_rank })}
@@ -86,12 +85,3 @@ export function ResultRow({ hit, testID, onPress }: ResultRowProps) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: spacing.sm },
-  top: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  speak: { marginLeft: "auto" },
-  surface: { flexShrink: 1 },
-  meta: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.md },
-  badgeRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-});

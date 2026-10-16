@@ -8,6 +8,7 @@ export interface SkeletonProps {
   /** Bán kính bo góc; mặc định 8 (radius.sm cũ) — truyền số khác sẽ ghi đè bằng style. */
   radius?: number;
   style?: StyleProp<ViewStyle>;
+  className?: string;
   testID?: string;
 }
 
@@ -20,12 +21,13 @@ export function Skeleton({
   height = 16,
   radius: cornerRadius,
   style,
+  className,
   testID,
 }: SkeletonProps) {
   return (
     <ReusablesSkeleton
       testID={testID}
-      className={cn("bg-border", cornerRadius === undefined && "rounded-sm")}
+      className={cn("bg-border", cornerRadius === undefined && "rounded-sm", className)}
       style={[
         { width, height },
         cornerRadius !== undefined ? { borderRadius: cornerRadius } : null,

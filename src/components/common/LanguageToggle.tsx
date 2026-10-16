@@ -15,7 +15,7 @@ export function LanguageToggle({ testID = "language-toggle" }: { testID?: string
       options={OPTIONS}
       value={locale}
       onChange={value => setLocale(value as Locale)}
-      style={{ width: 112 }}
+      className="w-28"
       testID={testID}
     />
   );

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ApiError } from "@/api/client";
@@ -23,7 +23,6 @@ import {
 } from "@/hooks/use-profile";
 import { useT } from "@/i18n";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing } from "@/theme";
 
 type ProfileFormScreenProps = NativeStackScreenProps<RootStackParamList, "ProfileForm">;
 
@@ -88,19 +87,19 @@ export function ProfileFormScreen({ navigation, route }: ProfileFormScreenProps)
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen
         title={isEdit ? t("profile.formEditTitle") : t("profile.formCreateTitle")}
         onBack={() => navigation.goBack()}
         scroll
-        contentStyle={styles.content}
+        contentClassName="gap-4"
         testID="profile-form"
       >
         {notFound ? (
           /* Hồ sơ cần sửa không còn trong danh sách (đã bị xoá ở nơi khác) */
-          <Card style={styles.card}>
+          <Card className="gap-3">
             <AppText variant="caption" center>
               {t("profile.loadError")}
             </AppText>
@@ -109,13 +108,13 @@ export function ProfileFormScreen({ navigation, route }: ProfileFormScreenProps)
               variant="outline"
               size="sm"
               onPress={() => void profiles.refetch()}
-              style={styles.retry}
+              className="self-center"
               testID="profile-form-retry"
             />
           </Card>
         ) : (
           <>
-            <Card style={styles.card}>
+            <Card className="gap-3">
               <AppText variant="caption">{t("profile.formDesc")}</AppText>
               <Input
                 label={t("profile.formName")}
@@ -131,9 +130,9 @@ export function ProfileFormScreen({ navigation, route }: ProfileFormScreenProps)
 
             {/* Ngôn ngữ học cố định JA — chỉ hiển thị để thông tin, không cho chọn */}
             <Card>
-              <View style={styles.languageRow}>
+              <View className="flex-row items-center gap-3">
                 <Flag code="ja" size="lg" />
-                <View style={styles.languageInfo}>
+                <View className="flex-1 gap-0.5">
                   <AppText variant="body" weight="semibold">
                     {t("onboarding.japanese")}
                   </AppText>
@@ -156,16 +155,3 @@ export function ProfileFormScreen({ navigation, route }: ProfileFormScreenProps)
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { gap: spacing.lg },
-  card: { gap: spacing.md },
-  languageRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  languageInfo: { flex: 1, gap: 2 },
-  retry: { alignSelf: "center" },
-});

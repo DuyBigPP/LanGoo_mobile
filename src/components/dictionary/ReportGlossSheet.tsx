@@ -1,12 +1,12 @@
 import * as React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Check, Flag } from "lucide-react-native";
 import { ApiError } from "@/api/client";
 import type { GlossReportIssue } from "@/api/dictionary";
 import { AppText, BottomSheet, Button, Divider, Input, useToast } from "@/components/ui";
 import { useGlossReportMutation } from "@/hooks/use-dictionary";
 import { useT } from "@/i18n";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SenseGlossDto } from "@/types/dictionary";
 
 /** Lý do báo lỗi — nhãn lấy từ khoá i18n dict.report* (như bản web). */
@@ -75,12 +75,12 @@ export function ReportGlossSheet({ visible, gloss, onClose }: ReportGlossSheetPr
       title={t("dict.reportTitle")}
       testID="report-gloss"
     >
-      <View style={styles.body}>
+      <View className="gap-3 pb-3">
         <AppText variant="caption" numberOfLines={2}>
           {`“${gloss.text}”`}
         </AppText>
 
-        <View style={styles.block}>
+        <View className="gap-2">
           <AppText variant="label">{t("dict.reportIssue")}</AppText>
           {ISSUE_OPTIONS.map((option, index) => {
             const selected = option.value === issue;
@@ -92,12 +92,12 @@ export function ReportGlossSheet({ visible, gloss, onClose }: ReportGlossSheetPr
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   testID={`report-issue-${option.value}`}
-                  className="active:opacity-85" style={styles.issueRow}
+                  className="min-h-[44px] flex-row items-center gap-2 py-1 active:opacity-85"
                 >
                   <AppText
                     variant="body"
                     weight={selected ? "semibold" : "regular"}
-                    style={styles.flex}
+                    className="flex-1"
                   >
                     {t(option.labelKey)}
                   </AppText>
@@ -118,7 +118,7 @@ export function ReportGlossSheet({ visible, gloss, onClose }: ReportGlossSheetPr
           testID="report-comment"
         />
 
-        <View style={styles.actions}>
+        <View className="flex-row justify-end gap-2">
           <Button
             label={t("common.cancel")}
             variant="outline"
@@ -137,18 +137,3 @@ export function ReportGlossSheet({ visible, gloss, onClose }: ReportGlossSheetPr
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  body: { gap: spacing.md, paddingBottom: spacing.md },
-  flex: { flex: 1 },
-  block: { gap: spacing.sm },
-  issueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    minHeight: 44,
-    paddingVertical: spacing.xs,
-  },
-  rowPressed: { opacity: 0.85 },
-  actions: { flexDirection: "row", justifyContent: "flex-end", gap: spacing.sm },
-});

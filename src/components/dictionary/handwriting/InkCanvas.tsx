@@ -2,7 +2,6 @@ import * as React from "react";
 import {
   ActivityIndicator,
   PanResponder,
-  StyleSheet,
   View,
   type GestureResponderEvent,
 } from "react-native";
@@ -10,7 +9,7 @@ import Svg, { Circle, Line, Path } from "react-native-svg";
 import { AppText } from "@/components/ui";
 import { useT } from "@/i18n";
 import type { InkPoint, InkStroke } from "@/lib/kanji-ink";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 /** Bề dày nét hiển thị trong khung vẽ (khớp bản web) */
 const STROKE_WIDTH = 10;
@@ -106,18 +105,11 @@ export function InkCanvas({
   );
 
   return (
-    <View style={styles.wrap}>
+    <View className="items-center">
       <View
         testID="handwriting-canvas"
-        style={[
-          styles.canvas,
-          {
-            width: size,
-            height: size,
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.border,
-          },
-        ]}
+        className="overflow-hidden rounded-xl border border-border bg-card"
+        style={{ width: size, height: size }}
         {...panResponder.panHandlers}
       >
         <Svg width={size} height={size} pointerEvents="none">
@@ -130,7 +122,7 @@ export function InkCanvas({
         </Svg>
         {loadingModel ? (
           <View
-            style={[styles.overlay, { backgroundColor: theme.colors.card }]}
+            className="absolute inset-0 items-center justify-center gap-2 bg-card"
             testID="handwriting-canvas-loading"
           >
             <ActivityIndicator size="small" color={theme.colors.primary} />
@@ -162,14 +154,3 @@ function InkStrokeShape({ stroke, color, width }: { stroke: InkPoint[]; color: s
     />
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { alignItems: "center" },
-  canvas: { borderWidth: 1, borderRadius: radius.xl, overflow: "hidden" },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-  },
-});

@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-  StyleSheet,
   View,
 } from "react-native";
 import { RotateCw } from "lucide-react-native";
@@ -26,7 +25,7 @@ import {
   fetchKanjiStrokeSvg,
   type KanjiStrokeSvg,
 } from "@/lib/kanji-stroke";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 /** `Path` animate được qua Animated (react-native-svg có sẵn setNativeProps cho Shape). */
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -38,8 +37,6 @@ const STROKE_GAP_MS = 130;
 const GHOST_OPACITY = 0.12;
 /** Bề dày nét theo style gốc KanjiVG (fill:none; stroke-width:3). */
 const STROKE_WIDTH = 3;
-/** Kích thước khung vẽ vuông. */
-const FRAME_SIZE = 168;
 /**
  * Hệ số bù khi ước lượng độ dài path: ước lượng thiếu sẽ khiến đuôi nét không
  * bao giờ vẽ hết, nên nới dư một chút (thừa ~2% chỉ làm nét vẽ xong sớm hơn rất ít).
@@ -172,14 +169,11 @@ export function KanjiStrokePlayer({ literal }: { literal: string }) {
   const svg = state.status === "done" ? state.data : null;
 
   return (
-    <View style={styles.section} testID="kanji-stroke-player">
+    <View className="gap-2" testID="kanji-stroke-player">
       <SectionHeader title={t("dict.sectionStrokes")} />
-      <View style={styles.body}>
+      <View className="items-center gap-2">
         <View
-          style={[
-            styles.frame,
-            { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
-          ]}
+          className="h-[168px] w-[168px] items-center justify-center rounded-lg border border-border bg-card p-2"
         >
           {svg ? (
             <Svg width="100%" height="100%" viewBox={svg.viewBox}>
@@ -219,7 +213,7 @@ export function KanjiStrokePlayer({ literal }: { literal: string }) {
               variant="outline"
               onPress={play}
               testID="kanji-stroke-replay"
-              style={styles.replay}
+              className="absolute right-1 top-1"
             />
           ) : null}
         </View>
@@ -232,18 +226,3 @@ export function KanjiStrokePlayer({ literal }: { literal: string }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { gap: spacing.sm },
-  body: { alignItems: "center", gap: spacing.sm },
-  frame: {
-    width: FRAME_SIZE,
-    height: FRAME_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.sm,
-  },
-  replay: { position: "absolute", top: spacing.xs, right: spacing.xs },
-});

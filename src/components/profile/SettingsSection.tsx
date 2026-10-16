@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Minus, Plus } from "lucide-react-native";
 import { ApiError } from "@/api/client";
 import {
@@ -19,7 +19,7 @@ import { APP_VERSION } from "@/config/env";
 import { useSettingsQuery, useUpdateSettingsMutation } from "@/hooks/use-profile";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
-import { spacing, useTheme, useThemeControls } from "@/theme";
+import { useTheme, useThemeControls } from "@/theme";
 
 /** Giá trị mặc định khi máy chủ chưa có cài đặt (giống bản web). */
 const DEFAULT_GOAL = 20;
@@ -112,13 +112,13 @@ export function SettingsSection() {
     <View testID="profile-settings">
       <SectionHeader title={t("settings.title")} />
       {settings.isPending ? (
-        <Card style={styles.card}>
+        <Card className="gap-4">
           <Skeleton height={18} width="50%" />
           <Skeleton height={44} />
           <Skeleton height={44} />
         </Card>
       ) : settings.isError ? (
-        <Card style={styles.card}>
+        <Card className="gap-4">
           <AppText variant="caption" center>
             {t("settings.loadError")}
           </AppText>
@@ -127,12 +127,12 @@ export function SettingsSection() {
             variant="outline"
             size="sm"
             onPress={() => void settings.refetch()}
-            style={styles.center}
+            className="self-center"
             testID="settings-retry"
           />
         </Card>
       ) : (
-        <Card style={styles.card}>
+        <Card className="gap-4">
           <NumberStepper
             label={t("settings.dailyGoal")}
             value={goal}
@@ -159,7 +159,7 @@ export function SettingsSection() {
           />
 
           {/* Múi giờ IANA: gõ tay hoặc lấy theo máy */}
-          <View style={styles.stepper}>
+          <View className="gap-2">
             <Input
               label={t("settings.timezone")}
               value={timezone}
@@ -174,7 +174,7 @@ export function SettingsSection() {
               variant="outline"
               size="sm"
               onPress={() => setTimezone(deviceTimezone())}
-              style={styles.center}
+              className="self-center"
               testID="settings-timezone-device"
             />
           </View>
@@ -190,10 +190,10 @@ export function SettingsSection() {
       )}
 
       {/* Giao diện + ngôn ngữ + phiên bản: cục bộ, không phụ thuộc máy chủ */}
-      <Card style={[styles.card, styles.local]}>
+      <Card className="mt-4 gap-4">
         <AppText variant="label">{t("settings.themeMode")}</AppText>
         <ThemeModeControl />
-        <View style={styles.langRow}>
+        <View className="flex-row items-center justify-between gap-2">
           <AppText variant="label">{t("language.label")}</AppText>
           <LanguageToggle testID="profile-language-toggle" />
         </View>
@@ -226,12 +226,12 @@ function NumberStepper({
   const clamp = (next: number) => Math.min(config.max, Math.max(config.min, next));
 
   return (
-    <View style={styles.stepper}>
-      <View style={styles.stepperHeader}>
+    <View className="gap-2">
+      <View className="flex-row items-center justify-between gap-2">
         <AppText variant="label">{label}</AppText>
         <AppText variant="caption">{unit}</AppText>
       </View>
-      <View style={styles.stepperControls}>
+      <View className="flex-row items-center justify-center gap-5">
         <IconButton
           icon={<Minus size={18} color={theme.colors.text} />}
           onPress={() => onChange(clamp(value - config.step))}
@@ -241,7 +241,7 @@ function NumberStepper({
           disabled={value <= config.min}
           testID={testID ? `${testID}-minus` : undefined}
         />
-        <AppText variant="title" style={styles.stepperValue}>
+        <AppText variant="title" className="min-w-[56px] text-center">
           {String(value)}
         </AppText>
         <IconButton
@@ -257,29 +257,3 @@ function NumberStepper({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: spacing.lg },
-  local: { marginTop: spacing.lg },
-  center: { alignSelf: "center" },
-  langRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  stepper: { gap: spacing.sm },
-  stepperHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  stepperControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xl,
-  },
-  stepperValue: { minWidth: 56, textAlign: "center" },
-});

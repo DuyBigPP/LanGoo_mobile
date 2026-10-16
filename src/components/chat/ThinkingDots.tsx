@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, View } from "react-native";
 import { AppText } from "@/components/ui";
 import { useT } from "@/i18n";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 /** 3 chấm nhấp nháy khi chờ chữ đầu tiên của trợ lý. */
 export function ThinkingDots() {
@@ -36,12 +36,12 @@ export function ThinkingDots() {
   });
 
   return (
-    <View style={styles.row} testID="chat-thinking">
-      <View style={styles.dots}>
+    <View className="flex-row items-center gap-2" testID="chat-thinking">
+      <View className="flex-row items-center gap-1">
         {[first, second, third].map((value, index) => (
           <Animated.View
             key={index}
-            style={[styles.dot, { backgroundColor: theme.colors.textMuted }, dotAnimatedStyle(value)]}
+            style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.textMuted }, dotAnimatedStyle(value)]}
           />
         ))}
       </View>
@@ -49,9 +49,3 @@ export function ThinkingDots() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  dots: { flexDirection: "row", alignItems: "center", gap: 4 },
-  dot: { width: 6, height: 6, borderRadius: radius.pill },
-});

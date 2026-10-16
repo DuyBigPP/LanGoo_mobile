@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Copy, Languages } from "lucide-react-native";
 import { FuriganaText } from "@/components/common/FuriganaText";
 import { AppText, Button, Card, useToast } from "@/components/ui";
@@ -7,7 +7,7 @@ import { useFurigana, useFuriganaPreference } from "@/hooks/use-furigana";
 import { useTranslation } from "@/hooks/use-translation";
 import { useT } from "@/i18n";
 import { copyText } from "@/lib/clipboard";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 /** Card dịch fallback (client-side) khi từ điển không có kết quả nào khớp. */
 export function TranslationFallback({ query }: { query: string }) {
@@ -26,10 +26,10 @@ export function TranslationFallback({ query }: { query: string }) {
   };
 
   return (
-    <Card style={styles.card} testID="dict-translation-fallback">
-      <View style={styles.header}>
+    <Card className="gap-2" testID="dict-translation-fallback">
+      <View className="flex-row items-center gap-2">
         <Languages size={16} color={theme.colors.primary} />
-        <AppText variant="subtitle" style={styles.title}>
+        <AppText variant="subtitle" className="flex-1">
           {t("dict.lookupTranslationTitle")}
         </AppText>
       </View>
@@ -37,8 +37,8 @@ export function TranslationFallback({ query }: { query: string }) {
       {translation.status === "loading" ? (
         <AppText variant="caption">{t("dict.lookupTranslating")}</AppText>
       ) : translation.status === "error" ? (
-        <View style={styles.error}>
-          <AppText variant="caption" color="danger" style={styles.title}>
+        <View className="flex-row items-center gap-2">
+          <AppText variant="caption" color="danger" className="flex-1">
             {t("dict.lookupTranslateError")}
           </AppText>
           <Button
@@ -66,10 +66,3 @@ export function TranslationFallback({ query }: { query: string }) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: spacing.sm },
-  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  title: { flex: 1 },
-  error: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-});

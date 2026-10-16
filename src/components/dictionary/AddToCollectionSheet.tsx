@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { Check } from "lucide-react-native";
 import { ApiError } from "@/api/client";
 import {
@@ -15,7 +15,7 @@ import { useAddCollectionItemMutation, useCollectionsQuery, useCreateCollectionM
 import { useActiveProfile } from "@/hooks/use-profile";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 export interface AddToCollectionSheetProps {
   visible: boolean;
@@ -126,7 +126,7 @@ export function AddToCollectionSheet({
       title={t("dict.addToTitle")}
       testID="add-to-collection"
     >
-      <View style={styles.body}>
+      <View className="gap-3 pb-3">
         <AppText variant="caption">
           {t("dict.addToDesc", {
             surface,
@@ -135,7 +135,7 @@ export function AddToCollectionSheet({
         </AppText>
 
         {collections.isPending ? (
-          <View style={styles.list}>
+          <View className="max-h-[220px]">
             {[0, 1, 2].map(index => (
               <Skeleton key={index} height={40} width="100%" />
             ))}
@@ -143,10 +143,10 @@ export function AddToCollectionSheet({
         ) : collections.isError ? (
           <AppText variant="caption">{t("errors.generic")}</AppText>
         ) : items.length > 0 ? (
-          <View style={styles.listBlock}>
+          <View className="gap-2">
             <AppText variant="label">{t("dict.chooseNotebook")}</AppText>
             <ScrollView
-              style={styles.list}
+              className="max-h-[220px]"
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -160,9 +160,9 @@ export function AddToCollectionSheet({
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
                       testID={`add-collection-${collection.id}`}
-                      className="active:opacity-85" style={styles.collectionRow}
+                      className="min-h-[52px] flex-row items-center gap-2 py-2 active:opacity-85"
                     >
-                      <View style={styles.flex}>
+                      <View className="flex-1">
                         <AppText
                           variant="body"
                           weight={selected ? "semibold" : "regular"}
@@ -190,14 +190,14 @@ export function AddToCollectionSheet({
         )}
 
         {/* Tạo sổ mới ngay trong sheet rồi chọn luôn (như web AddToCollectionDialog) */}
-        <View style={styles.createBlock}>
-          <View style={styles.createRow}>
+        <View className="gap-2">
+          <View className="flex-row items-center gap-2">
             <Input
               value={newName}
               onChangeText={setNewName}
               placeholder={t("dict.newNotebookPlaceholder")}
               autoCapitalize="sentences"
-              style={styles.flex}
+              className="flex-1"
               testID="add-new-collection-input"
             />
             <Button
@@ -244,20 +244,3 @@ export function AddToCollectionSheet({
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  body: { gap: spacing.md, paddingBottom: spacing.md },
-  flex: { flex: 1 },
-  listBlock: { gap: spacing.sm },
-  list: { maxHeight: 220 },
-  collectionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    minHeight: 52,
-    paddingVertical: spacing.sm,
-  },
-  createBlock: { gap: spacing.sm },
-  createRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  rowPressed: { opacity: 0.85 },
-});

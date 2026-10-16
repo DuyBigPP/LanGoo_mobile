@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { AppText } from "@/components/ui";
 import { useTagsQuery } from "@/hooks/use-tags";
 import { useT } from "@/i18n";
-import { radius, spacing, useTheme } from "@/theme";
 
 export interface TagPickerProps {
   selectedIds: string[];
@@ -16,7 +16,6 @@ export interface TagPickerProps {
  */
 export function TagPicker({ selectedIds, onChange }: TagPickerProps) {
   const t = useT();
-  const theme = useTheme();
   const tags = useTagsQuery(true);
   const items = tags.data?.data ?? [];
 
@@ -37,7 +36,7 @@ export function TagPicker({ selectedIds, onChange }: TagPickerProps) {
   };
 
   return (
-    <View style={styles.wrap} testID="tag-picker">
+    <View className="flex-row flex-wrap gap-2" testID="tag-picker">
       {items.map(tag => {
         const selected = selectedIds.includes(tag.id);
         return (
@@ -47,11 +46,10 @@ export function TagPicker({ selectedIds, onChange }: TagPickerProps) {
             accessibilityRole="button"
             accessibilityState={{ selected }}
             testID="tag-option"
-            className="active:opacity-85" style={[styles.option,
-              {
-                borderColor: selected ? theme.colors.primary : theme.colors.border,
-                backgroundColor: selected ? theme.colors.primary : theme.colors.card,
-              }]}
+            className={cn(
+              "rounded-sm border-[1.5px] px-2 py-[3px] active:opacity-85",
+              selected ? "border-primary bg-primary" : "border-border bg-card",
+            )}
           >
             <AppText
               size="sm"
@@ -66,18 +64,3 @@ export function TagPicker({ selectedIds, onChange }: TagPickerProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  option: {
-    borderWidth: 1.5,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-  },
-  pressed: { opacity: 0.85 },
-});

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AddToCollectionSheet } from "@/components/dictionary/AddToCollectionSheet";
 import { GlossesSection } from "@/components/dictionary/GlossesSection";
@@ -36,7 +36,6 @@ import { formKindLabel, posLabel } from "@/lib/dictionary-labels";
 import { kanjiReadings } from "@/lib/kanji";
 import { isHanChar } from "@/lib/lang";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing } from "@/theme";
 import type { SenseGlossDto } from "@/types/dictionary";
 
 type SenseDetailScreenProps = NativeStackScreenProps<RootStackParamList, "SenseDetail">;
@@ -142,17 +141,17 @@ export function SenseDetailScreen({ navigation, route }: SenseDetailScreenProps)
       title={t("dict.detailTitle")}
       onBack={() => navigation.goBack()}
       scroll
-      contentStyle={styles.content}
+      contentClassName="gap-4"
       testID="sense-detail"
     >
       {detail.isPending ? (
-        <View style={styles.skeletonWrap}>
+        <View className="gap-3">
           <Skeleton height={28} width="45%" />
           <Skeleton height={14} width="65%" />
           <Skeleton height={90} width="100%" />
         </View>
       ) : detail.isError ? (
-        <Card style={styles.section}>
+        <Card className="gap-2">
           <AppText variant="caption" center>
             {t("dict.detailError")}
           </AppText>
@@ -161,7 +160,7 @@ export function SenseDetailScreen({ navigation, route }: SenseDetailScreenProps)
             variant="outline"
             size="sm"
             onPress={() => void detail.refetch()}
-            style={styles.center}
+            className="self-center"
           />
         </Card>
       ) : detail.data ? (
@@ -219,9 +218,9 @@ export function SenseDetailScreen({ navigation, route }: SenseDetailScreenProps)
 
               {/* Dạng từ */}
               {forms.length > 0 ? (
-                <View style={styles.section}>
+                <View className="gap-2">
                   <SectionHeader title={t("dict.sectionForms")} />
-                  <View style={styles.formRow}>
+                  <View className="flex-row flex-wrap gap-2">
                     {forms.map(form => {
                       const kind = formKindLabel(form.kind);
                       return (
@@ -279,11 +278,3 @@ export function SenseDetailScreen({ navigation, route }: SenseDetailScreenProps)
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { gap: spacing.lg },
-  center: { alignSelf: "center" },
-  section: { gap: spacing.sm },
-  skeletonWrap: { gap: spacing.md },
-  formRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-});

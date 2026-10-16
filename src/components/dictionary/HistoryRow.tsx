@@ -1,9 +1,8 @@
 import React from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable } from "react-native";
 import { AppText, Card } from "@/components/ui";
 import { useT } from "@/i18n";
 import { formatNumber, formatRelativeTime } from "@/lib/format";
-import { spacing } from "@/theme";
 import type { SearchHistoryItemDto } from "@/types/dictionary";
 
 export interface HistoryRowProps {
@@ -22,10 +21,9 @@ export function HistoryRow({ item, index, onPick }: HistoryRowProps) {
         onPress={() => onPick(item.raw_query)}
         accessibilityRole="button"
         accessibilityLabel={item.raw_query}
-        className="active:opacity-85"
-        style={styles.row}
+        className="min-h-[52px] flex-row items-center gap-2 px-4 py-3 active:opacity-85"
       >
-        <AppText variant="body" weight="medium" numberOfLines={1} style={styles.query}>
+        <AppText variant="body" weight="medium" numberOfLines={1} className="flex-1">
           {item.raw_query}
         </AppText>
         <AppText variant="caption" numberOfLines={1}>
@@ -38,15 +36,3 @@ export function HistoryRow({ item, index, onPick }: HistoryRowProps) {
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    minHeight: 52,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  query: { flex: 1 },
-});

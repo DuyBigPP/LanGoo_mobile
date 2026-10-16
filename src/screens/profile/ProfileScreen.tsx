@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Linking, StyleSheet, View } from "react-native";
+import { Linking, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
@@ -33,7 +33,7 @@ import { useMeStatsQuery, useSrsStatsQuery } from "@/hooks/use-stats";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 type RootNavigation = NativeStackNavigationProp<RootStackParamList>;
 
@@ -83,8 +83,8 @@ export function ProfileScreen() {
 
   if (status !== "authenticated") {
     return (
-      <Screen title={t("profile.title")} scroll contentStyle={styles.content} testID="profile-screen">
-        <Card style={styles.guestCard} testID="profile-guest">
+      <Screen title={t("profile.title")} scroll contentClassName="gap-4" testID="profile-screen">
+        <Card className="gap-4" testID="profile-guest">
           <Button
             label={t("auth.loginAction")}
             icon={<LogIn size={16} color={theme.colors.onPrimary} />}
@@ -101,8 +101,8 @@ export function ProfileScreen() {
             testID="profile-register"
           />
           <ThemeModeControl />
-          <View style={styles.row}>
-            <AppText variant="label" style={styles.rowInfo}>
+          <View className="flex-row items-center gap-3">
+            <AppText variant="label" className="flex-1">
               {t("language.label")}
             </AppText>
             <LanguageToggle testID="profile-language-toggle" />
@@ -130,12 +130,12 @@ export function ProfileScreen() {
   }
 
   return (
-    <Screen title={t("profile.title")} scroll contentStyle={styles.content} testID="profile-screen">
+    <Screen title={t("profile.title")} scroll contentClassName="gap-4" testID="profile-screen">
       {/* (a) Thẻ tài khoản + nút đăng xuất (có hộp thoại xác nhận) */}
       <Card testID="profile-account">
-        <View style={styles.row}>
+        <View className="flex-row items-center gap-3">
           <Avatar name={user?.display_name || user?.email || undefined} />
-          <View style={styles.rowInfo}>
+          <View className="flex-1 gap-1">
             <AppText variant="body" weight="semibold" numberOfLines={1}>
               {user?.display_name || user?.email || t("account.guest")}
             </AppText>
@@ -157,7 +157,7 @@ export function ProfileScreen() {
       {statsFailed ? (
         /* Lỗi tải số liệu — một khối lỗi chung như web */
         <Card>
-          <View style={styles.statsError}>
+          <View className="items-center gap-3">
             <AppText variant="caption" center>
               {t("stats.loadError")}
             </AppText>
@@ -190,7 +190,7 @@ export function ProfileScreen() {
               }
             />
             <Card>
-              <View style={styles.statsGrid}>
+              <View className="flex-row flex-wrap gap-y-4">
                 <StatCell
                   label={t("stats.dueCards")}
                   value={srs?.due_now}
@@ -221,10 +221,10 @@ export function ProfileScreen() {
                 />
               </View>
               {!srsStats.isPending && me ? (
-                <View style={styles.goalRow}>
+                <View className="mt-3 flex-row items-center gap-3">
                   <ProgressBar
                     value={goalPercent}
-                    style={styles.goalBar}
+                    className="flex-1"
                     testID="profile-goal-bar"
                   />
                   <AppText variant="caption">{`${formatNumber(reviewsToday)}/${formatNumber(goal)}`}</AppText>
@@ -237,7 +237,7 @@ export function ProfileScreen() {
           <View>
             <SectionHeader title={t("stats.overview")} />
             <Card>
-              <View style={styles.statsGrid}>
+              <View className="flex-row flex-wrap gap-y-4">
                 <StatCell
                   label={t("stats.streakCurrent")}
                   value={me?.streak_current}
@@ -341,7 +341,7 @@ function StatCell({
 
   if (loading) {
     return (
-      <View style={styles.statCell}>
+      <View className="w-1/2 gap-1">
         <Skeleton width={48} height={22} />
         <Skeleton width={72} height={12} />
       </View>
@@ -349,7 +349,7 @@ function StatCell({
   }
 
   return (
-    <View style={styles.statCell}>
+    <View className="w-1/2 gap-1">
       <AppText variant="title">
         {value === undefined
           ? t("common.notAvailable")
@@ -364,31 +364,3 @@ function StatCell({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { gap: spacing.lg },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  rowInfo: { flex: 1, gap: spacing.xs },
-  statsError: { gap: spacing.md, alignItems: "center" },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    rowGap: spacing.lg,
-  },
-  statCell: {
-    width: "50%",
-    gap: spacing.xs,
-  },
-  goalRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  goalBar: { flex: 1 },
-  guestCard: { gap: spacing.lg },
-});

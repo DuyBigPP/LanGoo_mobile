@@ -59,7 +59,7 @@ function ThemedNavigation() {
         barStyle={theme.mode === "dark" ? "light-content" : "dark-content"}
         backgroundColor={theme.colors.background}
       />
-      <View style={{ flex: 1 }}>
+      <View className="flex-1">
         <OfflineBanner />
         <RootNavigator />
         <ClipboardLookup />

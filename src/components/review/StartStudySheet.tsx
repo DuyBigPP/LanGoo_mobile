@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Animated, ScrollView, StyleSheet, View } from "react-native";
+import { Animated, ScrollView, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Play, Sparkles } from "lucide-react-native";
@@ -17,7 +17,7 @@ import {
 import { useCreateQuizMutation, useStartQuizMutation } from "@/hooks/use-quizzes";
 import { useT } from "@/i18n";
 import type { RootStackParamList } from "@/navigation/types";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { QuizQuestionType } from "@/types/api";
 
 type RootNavigation = NativeStackNavigationProp<RootStackParamList>;
@@ -258,9 +258,9 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
       testID="start-study"
     >
       {generating ? (
-        <View style={styles.generating} testID="quiz-generating">
-          <View style={styles.generatingHead}>
-            <View style={[styles.sparkBox, { backgroundColor: theme.colors.primarySoft }]}>
+        <View className="gap-5 py-4" testID="quiz-generating">
+          <View className="items-center gap-2">
+            <View className="h-12 w-12 items-center justify-center rounded-lg bg-primary-soft">
               <Sparkles size={24} color={theme.colors.primary} />
             </View>
             <Animated.View style={{ opacity: shimmer }}>
@@ -274,9 +274,9 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
               </AppText>
             </Animated.View>
           </View>
-          <View style={styles.progressBlock}>
+          <View className="gap-2">
             <ProgressBar value={progress / 100} testID="quiz-generating-progress" />
-            <View style={styles.progressMeta}>
+            <View className="flex-row items-center justify-between">
               <AppText variant="caption" size="xs">
                 {t("review.generatingHint")}
               </AppText>
@@ -288,13 +288,13 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
         </View>
       ) : (
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.body}
+          className="shrink"
+          contentContainerClassName="gap-3 pb-3"
           showsVerticalScrollIndicator={false}
         >
           <Chip>{collection?.name ?? t("review.allNotebooks")}</Chip>
 
-          <View style={styles.field}>
+          <View className="gap-1">
             <AppText variant="label">{t("review.mode")}</AppText>
             <SegmentedControl
               options={modeOptions}
@@ -310,13 +310,10 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
 
           {mode === "quiz" ? (
             <>
-              <View style={styles.field}>
+              <View className="gap-1">
                 <AppText variant="label">{t("review.questionTypes")}</AppText>
                 <View
-                  style={[
-                    styles.typeGroup,
-                    { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
-                  ]}
+                  className="rounded-md border border-border bg-card px-2 py-1"
                 >
                   {QUESTION_TYPE_VALUES.map(value => (
                     <Checkbox
@@ -330,7 +327,7 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
                 </View>
               </View>
 
-              <View style={styles.field}>
+              <View className="gap-1">
                 <AppText variant="label">{t("review.questionCount")}</AppText>
                 <SegmentedControl
                   options={countOptions}
@@ -344,7 +341,7 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
         </ScrollView>
       )}
 
-      <View style={styles.actions}>
+      <View className="mt-3 flex-row justify-end gap-2">
         {generating ? (
           <Button label={t("review.generating")} disabled loading testID="study-start" />
         ) : (
@@ -371,32 +368,3 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flexShrink: 1 },
-  body: { gap: spacing.md, paddingBottom: spacing.md },
-  field: { gap: spacing.xs },
-  typeGroup: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  generating: { gap: spacing.xl, paddingVertical: spacing.lg },
-  generatingHead: { alignItems: "center", gap: spacing.sm },
-  sparkBox: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  progressBlock: { gap: spacing.sm },
-  progressMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-});

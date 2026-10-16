@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Plus, Search, X } from "lucide-react-native";
@@ -32,7 +32,7 @@ import { useSrsStatsQuery } from "@/hooks/use-stats";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { CollectionDto } from "@/types/api";
 
 type RootNavigation = NativeStackNavigationProp<RootStackParamList>;
@@ -139,7 +139,7 @@ export function CollectionsScreen() {
 
   /** (a) Tổng quan ôn tập hôm nay + (b) đầu mục sổ tay (đếm, tìm kiếm, tạo mới). */
   const header = (
-    <View style={styles.headerBlock}>
+    <View className="gap-3">
       <StudyOverviewCard stats={stats} onStartAll={() => openStudy(null)} />
 
       <SectionHeader
@@ -183,16 +183,16 @@ export function CollectionsScreen() {
 
   /** Trạng thái khi danh sách trống: đang tải / lỗi / chưa có sổ / không khớp tìm kiếm. */
   const emptyBlock = collections.isPending ? (
-    <View style={styles.list}>
+    <View className="gap-2">
       {Array.from({ length: 3 }).map((_, index) => (
-        <Card key={index} style={styles.skeletonCard}>
+        <Card key={index} className="gap-2">
           <Skeleton height={18} width="55%" />
           <Skeleton height={12} width="35%" />
         </Card>
       ))}
     </View>
   ) : collections.isError ? (
-    <Card style={styles.errorCard}>
+    <Card className="gap-2">
       <AppText variant="caption" center>
         {t("study.loadError")}
       </AppText>
@@ -201,7 +201,7 @@ export function CollectionsScreen() {
         variant="outline"
         size="sm"
         onPress={() => void collections.refetch()}
-        style={styles.retry}
+        className="self-center"
         testID="collections-retry"
       />
     </Card>
@@ -223,7 +223,7 @@ export function CollectionsScreen() {
 
   /** Chân danh sách: đang nạp trang tiếp / đã hết / lỗi nạp thêm. */
   const footer = (
-    <View style={styles.listFooter} testID="collections-footer">
+    <View className="items-center gap-2 py-2" testID="collections-footer">
       {collections.isFetchingNextPage ? (
         <ActivityIndicator size="small" color={theme.colors.primary} />
       ) : null}
@@ -241,7 +241,7 @@ export function CollectionsScreen() {
   );
 
   return (
-    <Screen title={t("study.title")} testID="collections-screen" contentStyle={styles.screenContent}>
+    <Screen title={t("study.title")} testID="collections-screen" contentClassName="p-0">
       <FlatList
         data={filtered}
         keyExtractor={item => item.id}
@@ -262,7 +262,7 @@ export function CollectionsScreen() {
         ListHeaderComponent={header}
         ListEmptyComponent={emptyBlock}
         ListFooterComponent={footer}
-        contentContainerStyle={styles.content}
+        contentContainerClassName="gap-4 p-4"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         onEndReached={handleEndReached}
@@ -330,13 +330,3 @@ export function CollectionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screenContent: { padding: 0 },
-  content: { padding: spacing.lg, gap: spacing.lg },
-  headerBlock: { gap: spacing.md },
-  list: { gap: spacing.sm },
-  skeletonCard: { gap: spacing.sm },
-  errorCard: { gap: spacing.sm },
-  retry: { alignSelf: "center" },
-  listFooter: { alignItems: "center", gap: spacing.sm, paddingVertical: spacing.sm },
-});

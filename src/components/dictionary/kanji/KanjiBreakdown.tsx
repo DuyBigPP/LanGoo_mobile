@@ -1,8 +1,7 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { AppText, Chip, SectionHeader } from "@/components/ui";
 import { translate, useT } from "@/i18n";
-import { radius, spacing, useTheme } from "@/theme";
 import type { KanjiComponentDto, KanjiPartDto } from "@/types/dictionary";
 import { KanjiGraph } from "./KanjiGraph";
 
@@ -41,7 +40,7 @@ export function KanjiBreakdown({ literal, tree, parts, radical, onOpenKanji }: K
   const hasTree = components.length > 0;
 
   return (
-    <View style={styles.section}>
+    <View className="gap-2">
       <SectionHeader title={t("dict.breakdownTitle")} />
       {hasTree || radical ? (
         <>
@@ -55,7 +54,7 @@ export function KanjiBreakdown({ literal, tree, parts, radical, onOpenKanji }: K
         </>
       ) : null}
       {hasTree ? (
-        <View style={styles.list} testID="kanji-breakdown">
+        <View className="gap-3" testID="kanji-breakdown">
           {components.map((component, index) => (
             <BreakdownNode
               key={`${component.char}-${component.position ?? index}`}
@@ -64,7 +63,7 @@ export function KanjiBreakdown({ literal, tree, parts, radical, onOpenKanji }: K
           ))}
         </View>
       ) : parts.length > 0 ? (
-        <View style={styles.list} testID="kanji-breakdown">
+        <View className="gap-3" testID="kanji-breakdown">
           {parts.map((part, index) => (
             <PartNode key={`${part.char}-${index}`} part={part} />
           ))}
@@ -78,10 +77,9 @@ export function KanjiBreakdown({ literal, tree, parts, radical, onOpenKanji }: K
 
 /** Ô chữ nhỏ có viền dùng chung cho node thành phần. */
 function CharBox({ char }: { char: string }) {
-  const theme = useTheme();
   return (
     <View
-      style={[styles.charBox, { borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+      className="h-[40px] w-[40px] items-center justify-center rounded-sm border border-border bg-background"
     >
       <AppText size="lg" weight="semibold">
         {char}
@@ -93,7 +91,6 @@ function CharBox({ char }: { char: string }) {
 /** Một node trong cây thành phần chữ Hán (đệ quy theo `children`). */
 function BreakdownNode({ component }: { component: KanjiComponentDto }) {
   const t = useT();
-  const theme = useTheme();
   const details = [
     positionLabel(component.position),
     component.original ? t("dict.breakdownOriginal", { char: component.original }) : null,
@@ -101,10 +98,10 @@ function BreakdownNode({ component }: { component: KanjiComponentDto }) {
   ].filter((value): value is string => Boolean(value));
 
   return (
-    <View testID={`kanji-component-${component.char}`} style={styles.nodeWrap}>
-      <View style={styles.nodeRow}>
+    <View testID={`kanji-component-${component.char}`} className="gap-2">
+      <View className="flex-row flex-wrap items-center gap-2">
         <CharBox char={component.char} />
-        <View style={styles.flex}>
+        <View className="flex-1">
           {component.name_vi || component.meaning_vi ? (
             <AppText variant="body" weight="medium" numberOfLines={1}>
               {component.name_vi ?? component.meaning_vi}
@@ -121,7 +118,7 @@ function BreakdownNode({ component }: { component: KanjiComponentDto }) {
         {component.is_phonetic ? <Chip>{t("dict.compPhonetic")}</Chip> : null}
       </View>
       {component.children.length > 0 ? (
-        <View style={[styles.children, { borderLeftColor: theme.colors.border }]}>
+        <View className="ml-4 gap-2 border-l-hairline border-border pl-3">
           {component.children.map((child, index) => (
             <BreakdownNode key={`${child.char}-${child.position ?? index}`} component={child} />
           ))}
@@ -135,9 +132,9 @@ function BreakdownNode({ component }: { component: KanjiComponentDto }) {
 function PartNode({ part }: { part: KanjiPartDto }) {
   const t = useT();
   return (
-    <View style={styles.nodeRow} testID={`kanji-part-${part.char}`}>
+    <View className="flex-row flex-wrap items-center gap-2" testID={`kanji-part-${part.char}`}>
       <CharBox char={part.char} />
-      <View style={styles.flex}>
+      <View className="flex-1">
         {part.name_vi || part.meaning_vi ? (
           <AppText variant="body" weight="medium" numberOfLines={1}>
             {part.name_vi ?? part.meaning_vi}
@@ -152,25 +149,3 @@ function PartNode({ part }: { part: KanjiPartDto }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  section: { gap: spacing.sm },
-  list: { gap: spacing.md },
-  nodeWrap: { gap: spacing.sm },
-  nodeRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  charBox: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.sm,
-  },
-  children: {
-    marginLeft: spacing.lg,
-    paddingLeft: spacing.md,
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    gap: spacing.sm,
-  },
-});

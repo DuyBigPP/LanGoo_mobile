@@ -1,8 +1,6 @@
 import React from "react";
-import { StyleSheet } from "react-native";
 import { LookupText } from "@/components/domain/LookupText";
 import { AppText } from "@/components/ui";
-import { useTheme } from "@/theme";
 
 export interface QuizContextSentenceProps {
   sentence: string;
@@ -19,7 +17,6 @@ export interface QuizContextSentenceProps {
  * highlight được cộng bù để index trả về luôn tính theo cả câu.
  */
 export function QuizContextSentence({ sentence, start, end, onLookup }: QuizContextSentenceProps) {
-  const theme = useTheme();
   const chars = Array.from(sentence);
   const from = typeof start === "number" ? Math.max(0, Math.min(chars.length, start)) : -1;
   const to = typeof end === "number" ? Math.max(0, Math.min(chars.length, end)) : -1;
@@ -40,7 +37,7 @@ export function QuizContextSentence({ sentence, start, end, onLookup }: QuizCont
         weight="semibold"
         color="primary"
         testID="quiz-context-target"
-        style={[styles.mark, { backgroundColor: theme.colors.primarySoft }]}
+        className="rounded-[4px] bg-primary-soft"
       >
         <LookupText
           text={chars.slice(from, to).join("")}
@@ -54,7 +51,3 @@ export function QuizContextSentence({ sentence, start, end, onLookup }: QuizCont
     </AppText>
   );
 }
-
-const styles = StyleSheet.create({
-  mark: { borderRadius: 4 },
-});

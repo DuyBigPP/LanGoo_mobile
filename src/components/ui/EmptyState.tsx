@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 import { View, type StyleProp, type ViewStyle } from "react-native";
 import { Inbox } from "lucide-react-native";
 import { useTheme } from "@/theme";
@@ -12,6 +13,7 @@ export interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   style?: StyleProp<ViewStyle>;
+  className?: string;
   testID?: string;
 }
 
@@ -23,13 +25,14 @@ export function EmptyState({
   actionLabel,
   onAction,
   style,
+  className,
   testID,
 }: EmptyStateProps) {
   // useTheme chỉ để lấy màu icon lucide (giá trị JS truyền vào prop `color`)
   const theme = useTheme();
 
   return (
-    <View className="items-center justify-center gap-2 px-7 py-7" style={style} testID={testID}>
+    <View className={cn("items-center justify-center gap-2 px-7 py-7", className)} style={style} testID={testID}>
       <View className="mb-1 h-[72px] w-[72px] items-center justify-center rounded-full bg-primary-soft">
         {icon ?? <Inbox size={34} color={theme.colors.primary} />}
       </View>

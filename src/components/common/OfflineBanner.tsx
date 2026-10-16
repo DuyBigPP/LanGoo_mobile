@@ -1,15 +1,13 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/ui/Text";
 import { useI18n } from "@/i18n";
-import { useTheme } from "@/theme";
 import { subscribeConnectivity } from "@/lib/netinfo";
 
 /** Banner offline đầu app (netinfo chưa link → luôn coi là online, banner ẩn). */
 export function OfflineBanner() {
   const { t } = useI18n();
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const [online, setOnline] = React.useState(true);
 
@@ -19,10 +17,8 @@ export function OfflineBanner() {
   return (
     <View
       accessibilityRole="alert"
-      style={[
-        styles.container,
-        { backgroundColor: theme.colors.dangerSoft, paddingTop: insets.top + 8 },
-      ]}
+      className="gap-0.5 bg-danger-soft px-4 pb-2"
+      style={{ paddingTop: insets.top + 8 }}
     >
       <AppText variant="label" color="danger">
         {t("pwa.offlineTitle")}
@@ -33,7 +29,3 @@ export function OfflineBanner() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { paddingHorizontal: 16, paddingBottom: 8, gap: 2 },
-});

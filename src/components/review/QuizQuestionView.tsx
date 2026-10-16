@@ -1,10 +1,10 @@
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Shuffle } from "lucide-react-native";
 import { SpeakButton } from "@/components/domain/SpeakButton";
 import { AppText, Button, Input } from "@/components/ui";
 import { useT } from "@/i18n";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import { QuizContextSentence } from "./QuizContextSentence";
 import type { QuestionPayload, QuizItem } from "./quiz-model";
 
@@ -68,13 +68,13 @@ export function QuizQuestionView({
   };
 
   return (
-    <View style={styles.question}>
-      <View style={styles.head}>
+    <View className="gap-3">
+      <View className="flex-row items-center justify-center gap-1">
         <Shuffle size={14} color={theme.colors.textMuted} />
         <AppText variant="caption">{hint}</AppText>
       </View>
-      <View style={styles.promptRow}>
-        <AppText variant="title" center testID="quiz-question" style={styles.promptText}>
+      <View className="flex-row items-center justify-center gap-2">
+        <AppText variant="title" center testID="quiz-question" className="shrink">
           {item.promptText}
         </AppText>
         {item.promptText.trim() ? (
@@ -84,10 +84,7 @@ export function QuizQuestionView({
 
       {showContext ? (
         <View
-          style={[
-            styles.context,
-            { borderColor: theme.colors.border, backgroundColor: theme.colors.background },
-          ]}
+          className="gap-1 rounded-md border border-border bg-background px-3 py-2"
           testID="quiz-context"
         >
           <QuizContextSentence
@@ -109,7 +106,7 @@ export function QuizQuestionView({
       ) : null}
 
       {isChoice ? (
-        <View style={styles.options}>
+        <View className="gap-2">
           {item.options.map(option => (
             <Button
               key={option.index}
@@ -118,7 +115,7 @@ export function QuizQuestionView({
               fullWidth
               onPress={() => onSubmit({ option_index: option.index })}
               disabled={disabled || submitting}
-              style={styles.optionButton}
+              className="justify-start"
               testID={`quiz-option-${option.index}`}
             />
           ))}
@@ -126,14 +123,14 @@ export function QuizQuestionView({
       ) : null}
 
       {isTyping ? (
-        <View style={styles.typingRow}>
+        <View className="flex-row items-start gap-2">
           <Input
             value={typed}
             onChangeText={setTyped}
             placeholder={t("review.typingQuizPlaceholder")}
             maxLength={200}
             testID="quiz-answer"
-            style={styles.typingInput}
+            className="flex-1"
           />
           <Button
             label={t("review.check")}
@@ -147,9 +144,9 @@ export function QuizQuestionView({
       ) : null}
 
       {isMatching ? (
-        <View style={styles.matching}>
-          <View style={styles.matchGrid}>
-            <View style={styles.matchColumn}>
+        <View className="gap-3">
+          <View className="flex-row gap-2">
+            <View className="flex-1 gap-2">
               {item.left.map(left => {
                 const chosenText = item.right.find(right => right.index === pairs[left.index])
                   ?.text;
@@ -161,13 +158,13 @@ export function QuizQuestionView({
                     size="sm"
                     onPress={() => setSelectedLeft(left.index)}
                     disabled={disabled || submitting}
-                    style={styles.matchButton}
+                    className="self-stretch"
                     testID={`quiz-match-left-${left.index}`}
                   />
                 );
               })}
             </View>
-            <View style={styles.matchColumn}>
+            <View className="flex-1 gap-2">
               {item.right.map(right => (
                 <Button
                   key={right.index}
@@ -176,17 +173,17 @@ export function QuizQuestionView({
                   size="sm"
                   onPress={() => handlePickRight(right.index)}
                   disabled={disabled || submitting || selectedLeft == null}
-                  style={styles.matchButton}
+                  className="self-stretch"
                   testID={`quiz-match-right-${right.index}`}
                 />
               ))}
             </View>
           </View>
-          <View style={styles.matchFooter}>
+          <View className="flex-row items-center justify-between gap-2">
             <AppText variant="caption">
               {t("review.matched", { done: paired, total: item.left.length })}
             </AppText>
-            <View style={styles.matchActions}>
+            <View className="flex-row items-center gap-2">
               <Button
                 label={t("review.reset")}
                 variant="ghost"
@@ -218,42 +215,3 @@ export function QuizQuestionView({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  question: { gap: spacing.md },
-  head: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-  },
-  promptRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-  },
-  promptText: { flexShrink: 1 },
-  context: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  options: { gap: spacing.sm },
-  optionButton: { justifyContent: "flex-start" },
-  typingRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
-  typingInput: { flex: 1 },
-  matching: { gap: spacing.md },
-  matchGrid: { flexDirection: "row", gap: spacing.sm },
-  matchColumn: { flex: 1, gap: spacing.sm },
-  matchButton: { alignSelf: "stretch" },
-  matchFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  matchActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-});

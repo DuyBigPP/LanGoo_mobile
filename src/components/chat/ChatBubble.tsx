@@ -1,8 +1,8 @@
 import React from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { AppText } from "@/components/ui";
 import { useT } from "@/i18n";
-import { radius, spacing, useTheme } from "@/theme";
 import { formatTime } from "./chat-helpers";
 import { ChatMarkdown } from "./ChatMarkdown";
 import { ThinkingDots } from "./ThinkingDots";
@@ -24,13 +24,12 @@ export interface ChatBubbleProps {
  *  Trên bong bóng có nhãn người gửi + giờ gửi tin (như bản web). */
 export function ChatBubble({ role, content, createdAt, images, thinking, streaming }: ChatBubbleProps) {
   const t = useT();
-  const theme = useTheme();
   const isUser = role === "user";
   const body = streaming && !thinking && content ? `${content}▍` : content;
 
   return (
-    <View style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
-      <View style={styles.meta}>
+    <View className={cn("w-full", isUser ? "items-end" : "items-start")}>
+      <View className="flex-row items-center gap-2">
         <AppText variant="caption" size="xs">
           {isUser ? t("chat.you") : t("chat.title")}
         </AppText>
@@ -41,19 +40,16 @@ export function ChatBubble({ role, content, createdAt, images, thinking, streami
         ) : null}
       </View>
       <View
-        style={[
-          styles.bubble,
-          { borderColor: theme.colors.border },
-          isUser
-            ? { backgroundColor: theme.colors.primarySoft }
-            : { backgroundColor: theme.colors.card },
-        ]}
+        className={cn(
+          "max-w-[85%] rounded-lg border border-border px-3.5 py-2.5",
+          isUser ? "bg-primary-soft" : "bg-card",
+        )}
         testID={isUser ? "chat-message-user" : "chat-message-assistant"}
       >
         {images && images.length > 0 ? (
-          <View style={styles.images} testID="chat-message-images">
+          <View className="mb-2 flex-row flex-wrap gap-2" testID="chat-message-images">
             {images.map((uri, index) => (
-              <Image key={index} source={{ uri }} style={styles.image} />
+              <Image key={index} source={{ uri }} className="h-[72px] w-[72px] rounded-md" />
             ))}
           </View>
         ) : null}
@@ -68,19 +64,3 @@ export function ChatBubble({ role, content, createdAt, images, thinking, streami
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { width: "100%" },
-  rowUser: { alignItems: "flex-end" },
-  rowAssistant: { alignItems: "flex-start" },
-  meta: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  bubble: {
-    maxWidth: "85%",
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  images: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.sm },
-  image: { width: 72, height: 72, borderRadius: radius.md },
-});

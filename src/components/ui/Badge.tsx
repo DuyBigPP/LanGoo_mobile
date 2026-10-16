@@ -10,6 +10,7 @@ export interface BadgeProps {
   children: React.ReactNode;
   tone?: BadgeTone;
   style?: StyleProp<ViewStyle>;
+  className?: string;
   testID?: string;
 }
 
@@ -31,7 +32,7 @@ const TONE_TEXT: Record<BadgeTone, string> = {
  * — dùng cho trạng thái nghĩa (MÁY / ĐÃ DUYỆT), nhãn phụ.
  * Lõi là Badge của Reusables (variant `outline`), giữ đúng hình học cũ qua className.
  */
-export function Badge({ children, tone = "default", style, testID }: BadgeProps) {
+export function Badge({ children, tone = "default", style, className, testID }: BadgeProps) {
   const content =
     typeof children === "string" || typeof children === "number" ? (
       <AppText
@@ -48,7 +49,7 @@ export function Badge({ children, tone = "default", style, testID }: BadgeProps)
   return (
     <ReusablesBadge
       variant="outline"
-      className={cn("self-start rounded-sm border-[1.5px] px-2 py-[1px]", TONE_BORDER[tone])}
+      className={cn("self-start rounded-sm border-[1.5px] px-2 py-[1px]", TONE_BORDER[tone], className)}
       style={style}
       testID={testID}
     >

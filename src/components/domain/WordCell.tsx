@@ -1,7 +1,7 @@
 import React from "react";
-import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import { spacing } from "@/theme";
+import { View, type StyleProp, type ViewStyle } from "react-native";
 import { AppText, Flag } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 export interface WordCellProps {
   /** Mặt chữ (từ gốc hoặc biến thể). */
@@ -12,15 +12,16 @@ export interface WordCellProps {
   langCode?: string;
   right?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  className?: string;
   testID?: string;
 }
 
 /** Ô từ vựng: cờ ngôn ngữ + từ + cách đọc + slot phải tuỳ chọn. */
-export function WordCell({ surface, reading, langCode, right, style, testID }: WordCellProps) {
+export function WordCell({ surface, reading, langCode, right, style, className, testID }: WordCellProps) {
   return (
-    <View style={[styles.row, style]} testID={testID}>
+    <View className={cn("flex-row items-center gap-3", className)} style={style} testID={testID}>
       {langCode ? <Flag code={langCode} size="sm" /> : null}
-      <View style={styles.body}>
+      <View className="flex-1 gap-0.5">
         <AppText size="lg" weight="semibold" numberOfLines={1}>
           {surface}
         </AppText>
@@ -30,13 +31,7 @@ export function WordCell({ surface, reading, langCode, right, style, testID }: W
           </AppText>
         ) : null}
       </View>
-      {right ? <View style={styles.right}>{right}</View> : null}
+      {right ? <View className="flex-row items-center gap-2">{right}</View> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  body: { flex: 1, gap: 2 },
-  right: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-});

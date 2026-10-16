@@ -14,6 +14,7 @@ export interface IconButtonProps {
   disabled?: boolean;
   testID?: string;
   style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 /** Kích cỡ gốc (px) — dùng cho bán kính ripple Android. */
@@ -36,6 +37,7 @@ export function IconButton({
   disabled = false,
   testID,
   style,
+  className,
 }: IconButtonProps) {
   const theme = useTheme();
   const dimension = SIZES[size];
@@ -63,6 +65,7 @@ export function IconButton({
         shape === "circle" ? "rounded-full" : "rounded-lg",
         variant === "outline" && "border border-border",
         disabled && "opacity-40",
+        className,
       )}
       style={style}
     >

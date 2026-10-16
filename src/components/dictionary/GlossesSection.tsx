@@ -1,10 +1,10 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Flag } from "lucide-react-native";
 import { dictionaryLanguage, glossSpeakLang } from "@/components/dictionary/dictionary-language";
 import { SpeakButton } from "@/components/domain/SpeakButton";
 import { AppText, Badge, IconButton, SectionHeader } from "@/components/ui";
 import { useT } from "@/i18n";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SenseGlossDto } from "@/types/dictionary";
 
 export interface GlossesSectionProps {
@@ -24,7 +24,7 @@ export function GlossesSection({ glosses, onReport }: GlossesSectionProps) {
 
   if (glosses.length === 0) {
     return (
-      <View style={styles.section}>
+      <View className="gap-2">
         <SectionHeader title={t("dict.sectionMeaning")} />
         <AppText variant="caption">{t("dict.lookupNoMeaning")}</AppText>
       </View>
@@ -32,25 +32,25 @@ export function GlossesSection({ glosses, onReport }: GlossesSectionProps) {
   }
 
   return (
-    <View style={styles.section}>
+    <View className="gap-2">
       <SectionHeader title={t("dict.sectionMeaning")} />
-      <View style={styles.list}>
+      <View className="gap-2">
         {glosses.map(gloss => {
           const language = dictionaryLanguage(gloss.language_id);
           const speakLang = glossSpeakLang(gloss.language_id);
           return (
-            <View key={gloss.id} style={styles.row} testID={`gloss-${gloss.id}`}>
-              <AppText variant="caption" style={styles.rank}>
+            <View key={gloss.id} className="flex-row items-start gap-2" testID={`gloss-${gloss.id}`}>
+              <AppText variant="caption" className="mt-0.5 w-4">
                 {gloss.rank}
               </AppText>
-              <View style={styles.body}>
+              <View className="flex-1 gap-0.5">
                 <AppText variant="body" weight="medium" selectable>
                   {gloss.text}
                 </AppText>
-                <View style={styles.badgeRow}>
+                <View className="flex-row flex-wrap items-center gap-1">
                   {gloss.reviewed ? <Badge>{t("dict.reviewed")}</Badge> : null}
                   {language ? (
-                    <AppText size="xs" color="muted" style={styles.langCode}>
+                    <AppText size="xs" color="muted" className="uppercase tracking-[0.6px]">
                       {language.code}
                     </AppText>
                   ) : null}
@@ -78,13 +78,3 @@ export function GlossesSection({ glosses, onReport }: GlossesSectionProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { gap: spacing.sm },
-  list: { gap: spacing.sm },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
-  rank: { width: 16, marginTop: 2 },
-  body: { flex: 1, gap: 2 },
-  badgeRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.xs },
-  langCode: { textTransform: "uppercase", letterSpacing: 0.6 },
-});

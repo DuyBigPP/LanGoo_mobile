@@ -1,9 +1,9 @@
 import * as React from "react";
-import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { ScrollView, View, useWindowDimensions } from "react-native";
 import { MessageSquarePlus } from "lucide-react-native";
 import { AppText, BottomSheet, Button, Divider, Skeleton } from "@/components/ui";
 import { useT } from "@/i18n";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { ChatSessionDto } from "@/types/api";
 import { SessionRow } from "./SessionRow";
 
@@ -56,30 +56,30 @@ export function SessionsSheet({
         icon={<MessageSquarePlus size={16} color={theme.colors.text} />}
         onPress={onNew}
         fullWidth
-        style={styles.newButton}
+        className="mb-2"
         testID="chat-new-session-sheet"
       />
       <ScrollView
         style={{ maxHeight: Math.max(240, windowHeight * 0.55) }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerClassName="pb-2"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {isPending ? (
-          <View style={styles.loading}>
+          <View className="gap-4 py-4">
             {[0, 1, 2].map(index => (
-              <View key={index} style={styles.skeleton}>
+              <View key={index} className="gap-2">
                 <Skeleton height={16} width="55%" />
                 <Skeleton height={12} width="35%" />
               </View>
             ))}
           </View>
         ) : isError ? (
-          <AppText variant="caption" center style={styles.message}>
+          <AppText variant="caption" center className="py-7">
             {t("chat.sessionsLoadError")}
           </AppText>
         ) : sessions.length === 0 ? (
-          <AppText variant="caption" center style={styles.message}>
+          <AppText variant="caption" center className="py-7">
             {t("chat.noSessions")}
           </AppText>
         ) : (
@@ -96,14 +96,14 @@ export function SessionsSheet({
           ))
         )}
         {hasNextPage ? (
-          <View style={styles.more}>
+          <View className="items-center py-3">
             <Button
               label={isFetchingNextPage ? t("common.loading") : t("common.loadMore")}
               variant="outline"
               size="sm"
               onPress={onLoadMore}
               disabled={isFetchingNextPage}
-              style={styles.moreButton}
+              className="self-center"
               testID="chat-sessions-more"
             />
           </View>
@@ -112,13 +112,3 @@ export function SessionsSheet({
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  newButton: { marginBottom: spacing.sm },
-  scrollContent: { paddingBottom: spacing.sm },
-  loading: { gap: spacing.lg, paddingVertical: spacing.lg },
-  skeleton: { gap: spacing.sm },
-  message: { paddingVertical: spacing.xxl },
-  more: { alignItems: "center", paddingVertical: spacing.md },
-  moreButton: { alignSelf: "center" },
-});

@@ -15,6 +15,7 @@ export interface AvatarProps {
   uri?: string;
   size?: AvatarSize;
   style?: StyleProp<ViewStyle>;
+  className?: string;
   testID?: string;
 }
 
@@ -36,14 +37,14 @@ function initialsOf(name?: string): string {
  * Avatar tròn — ảnh nếu có, ngược lại hiển thị chữ cái đầu trên nền primarySoft.
  * Lõi là Avatar/AvatarImage/AvatarFallback của Reusables.
  */
-export function Avatar({ name, uri, size = "md", style, testID }: AvatarProps) {
+export function Avatar({ name, uri, size = "md", style, className, testID }: AvatarProps) {
   return (
     <ReusablesAvatar
       alt={name ?? ""}
       testID={testID}
       accessibilityRole="image"
       accessibilityLabel={name}
-      className={cn("bg-primary-soft", SIZE_CLASS[size])}
+      className={cn("bg-primary-soft", SIZE_CLASS[size], className)}
       style={style}
     >
       {uri ? (

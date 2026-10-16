@@ -39,6 +39,7 @@ export interface InputProps {
   rightSlot?: React.ReactNode;
   testID?: string;
   style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 /** Ô nhập liệu: viền primary khi focus, viền danger khi có lỗi. */
@@ -64,6 +65,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     rightSlot,
     testID,
     style,
+    className,
   },
   ref,
 ) {
@@ -71,7 +73,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const hasError = Boolean(error);
 
   return (
-    <View style={style}>
+    <View className={className} style={style}>
       {label ? <Text className="mb-1 text-sm font-semibold">{label}</Text> : null}
       <View
         className={cn(

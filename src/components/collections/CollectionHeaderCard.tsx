@@ -1,11 +1,11 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Archive, Pencil, Play } from "lucide-react-native";
 import { AppText, Button, Card, Chip } from "@/components/ui";
 import { useT } from "@/i18n";
 import { collectionKindLabel } from "@/lib/dictionary-labels";
 import { formatNumber } from "@/lib/format";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 export interface CollectionHeaderCardProps {
   name: string;
@@ -32,8 +32,8 @@ export function CollectionHeaderCard({
 
   return (
     <Card testID="collection-header">
-      <View style={styles.titleRow}>
-        <AppText variant="subtitle" numberOfLines={1} style={styles.name}>
+      <View className="flex-row flex-wrap items-center gap-2">
+        <AppText variant="subtitle" numberOfLines={1} className="shrink">
           {name}
         </AppText>
         <Chip>{collectionKindLabel(kind)}</Chip>
@@ -44,7 +44,7 @@ export function CollectionHeaderCard({
           {description}
         </AppText>
       ) : null}
-      <View style={styles.actions}>
+      <View className="mt-3 flex-row flex-wrap gap-2">
         <Button
           label={t("study.studyThis")}
           size="sm"
@@ -73,8 +73,3 @@ export function CollectionHeaderCard({
   );
 }
 
-const styles = StyleSheet.create({
-  titleRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  name: { flexShrink: 1 },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.md },
-});

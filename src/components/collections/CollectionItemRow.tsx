@@ -1,11 +1,10 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { SpeakButton } from "@/components/domain/SpeakButton";
 import { WordCell } from "@/components/domain/WordCell";
 import { AppText, Chip } from "@/components/ui";
 import { useSenseDetail } from "@/hooks/use-dictionary";
 import { itemStatusLabel } from "@/lib/dictionary-labels";
-import { radius, spacing, useTheme } from "@/theme";
 import type { ItemResponseDto, TagDto } from "@/types/api";
 
 export interface CollectionItemRowProps {
@@ -21,7 +20,6 @@ export interface CollectionItemRowProps {
  * + nghĩa VI + ghi chú + chip trạng thái. Chạm = sửa, nhấn giữ = xoá.
  */
 export function CollectionItemRow({ item, index, tagsById, onOpen, onDelete }: CollectionItemRowProps) {
-  const theme = useTheme();
   const sense = useSenseDetail(item.display_sense_id ?? item.anchor_sense_id);
   const card = sense.data?.card;
   const itemTags = item.tag_ids
@@ -36,15 +34,14 @@ export function CollectionItemRow({ item, index, tagsById, onOpen, onDelete }: C
       accessibilityRole="button"
       accessibilityLabel={item.meaning_vi}
       testID={`item-row-${item.id}`}
-      className="active:opacity-90"
-      style={[styles.row, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+      className="gap-2 rounded-lg border border-border bg-card p-3 active:opacity-90"
     >
-      <View style={styles.header}>
+      <View className="flex-row items-center gap-2">
         <WordCell
           surface={card?.lemma ?? "…"}
           reading={card?.reading ?? undefined}
           langCode="ja"
-          style={styles.word}
+          className="flex-1"
           right={
             card?.lemma ? (
               // Loa đọc mặt chữ ngay trong hàng (như ItemWordCell bản web)
@@ -55,7 +52,7 @@ export function CollectionItemRow({ item, index, tagsById, onOpen, onDelete }: C
         <Chip>{itemStatusLabel(item.status)}</Chip>
       </View>
       {itemTags.length > 0 ? (
-        <View style={styles.tags}>
+        <View className="flex-row flex-wrap gap-2">
           {itemTags.map(tag => (
             <Chip key={tag.id}>{tag.name}</Chip>
           ))}
@@ -73,9 +70,3 @@ export function CollectionItemRow({ item, index, tagsById, onOpen, onDelete }: C
   );
 }
 
-const styles = StyleSheet.create({
-  row: { gap: spacing.sm, borderWidth: 1, borderRadius: radius.lg, padding: spacing.md },
-  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  word: { flex: 1 },
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-});

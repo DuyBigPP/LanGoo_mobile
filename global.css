@@ -31,6 +31,7 @@
   --text-faint: 148 163 184;
   --card-elevated: 255 255 255;
   --primary-soft: 227 236 249;
+  --danger-soft: 254 226 226;
 }
 
 .dark:root {
@@ -62,4 +63,5 @@
   --text-faint: 107 116 136;
   --card-elevated: 31 37 47;
   --primary-soft: 39 46 58;
+  --danger-soft: 58 29 29;
 }

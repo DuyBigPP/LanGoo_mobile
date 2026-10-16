@@ -1,9 +1,10 @@
 import * as React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react-native";
 import { AppText, Card, Divider } from "@/components/ui";
 import { useT } from "@/i18n";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SenseCardDto } from "@/types/dictionary";
 
 /** Số nghĩa hiện trước khi thu gọn (như bản web). */
@@ -33,7 +34,7 @@ export function SenseListCard({ surface, senses, activeSenseId, onSelect }: Sens
 
   return (
     <Card padded={false} testID="sense-list">
-      <View style={styles.listHeader}>
+      <View className="px-4 py-3">
         <AppText variant="label" color="muted">
           {t("dict.sensesOf", { surface })}
         </AppText>
@@ -60,8 +61,7 @@ export function SenseListCard({ surface, senses, activeSenseId, onSelect }: Sens
           accessibilityRole="button"
           accessibilityState={{ expanded: showAll }}
           testID="sense-show-more"
-          className="active:opacity-85"
-          style={styles.showMore}
+          className="flex-row items-center justify-center gap-1 px-4 py-3 active:opacity-85"
         >
           {showAll ? (
             <ChevronUp size={14} color={theme.colors.primary} />
@@ -91,7 +91,6 @@ function SenseRow({
   indent?: boolean;
   onSelect: () => void;
 }) {
-  const theme = useTheme();
   const title = sense.gloss_vi ?? sense.gloss_en ?? sense.lemma;
   const sub = sense.gloss_vi ? sense.gloss_en : null;
 
@@ -101,17 +100,16 @@ function SenseRow({
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       testID={`sense-row-${sense.sense_id}`}
-      className="active:opacity-85"
-      style={[
-        styles.senseRow,
-        indent ? styles.senseRowIndent : null,
-        active ? { backgroundColor: theme.colors.primarySoft } : null,
-      ]}
+      className={cn(
+        "flex-row items-start gap-2 px-4 py-3 active:opacity-85",
+        indent && "pl-7",
+        active && "bg-primary-soft",
+      )}
     >
       <AppText variant="caption" color={active ? "primary" : "muted"}>
         {sense.sense_no}
       </AppText>
-      <View style={styles.flex}>
+      <View className="flex-1">
         <AppText
           variant={indent ? "caption" : "body"}
           weight={indent ? "regular" : "medium"}
@@ -169,15 +167,14 @@ function SenseGroupItem({
             accessibilityRole="button"
             accessibilityState={{ expanded }}
             testID={`sense-group-toggle-${sense.sense_id}`}
-            className="active:opacity-85"
-            style={styles.groupToggle}
+            className="flex-row items-center gap-2 px-4 py-2 active:opacity-85"
           >
             {expanded ? (
               <ChevronDown size={14} color={theme.colors.textMuted} />
             ) : (
               <ChevronRight size={14} color={theme.colors.textMuted} />
             )}
-            <AppText variant="caption" numberOfLines={1} style={styles.flex}>
+            <AppText variant="caption" numberOfLines={1} className="flex-1">
               {sense.group_heading ?? t("dict.senseGroup")}
             </AppText>
             <AppText variant="caption">{t("dict.subSenses", { count: children.length })}</AppText>
@@ -200,31 +197,3 @@ function SenseGroupItem({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  listHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  senseRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  senseRowIndent: { paddingLeft: spacing.xxl },
-  groupToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  showMore: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-});

@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { ChevronDown, CornerDownRight } from "lucide-react-native";
 import { KanjiCard } from "@/components/dictionary/KanjiCard";
 import { ResultRow } from "@/components/dictionary/ResultRow";
@@ -8,7 +8,7 @@ import { AppText, Button, Card, SectionHeader, Skeleton } from "@/components/ui"
 import type { useDictionarySearch } from "@/hooks/use-dictionary";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SearchHitDto } from "@/types/dictionary";
 
 export interface DictionaryResultsProps {
@@ -48,14 +48,14 @@ export function DictionaryResults({
       {search.isPending ? (
         <Card testID="dict-results-loading">
           {[0, 1, 2, 3, 4].map(index => (
-            <View key={index} style={styles.skeleton}>
+            <View key={index} className="gap-2 py-2">
               <Skeleton height={18} width="35%" />
               <Skeleton height={12} width="60%" />
             </View>
           ))}
         </Card>
       ) : search.isError ? (
-        <Card style={styles.section}>
+        <Card className="gap-2">
           <AppText variant="caption" center>
             {t("dict.loadError")}
           </AppText>
@@ -65,17 +65,17 @@ export function DictionaryResults({
             size="sm"
             onPress={() => void search.refetch()}
             disabled={search.isRefetching}
-            style={styles.center}
+            className="self-center"
           />
         </Card>
       ) : (
         <>
           {/* Thể chia của từ — backend không có entry cho dạng đang tra */}
           {deinflectHit ? (
-            <View style={styles.section} testID="dict-deinflect">
-              <View style={styles.deinflectHeader}>
+            <View className="gap-2" testID="dict-deinflect">
+              <View className="flex-row items-center gap-2">
                 <CornerDownRight size={16} color={theme.colors.primary} />
-                <AppText variant="subtitle" style={styles.flex}>
+                <AppText variant="subtitle" className="flex-1">
                   {t("dict.deinflectTitle")}
                 </AppText>
                 <AppText variant="caption" numberOfLines={1}>
@@ -91,7 +91,7 @@ export function DictionaryResults({
           ) : null}
 
           {hits.length > 0 ? (
-            <View style={styles.section} testID="dict-results-panel">
+            <View className="gap-2" testID="dict-results-panel">
               <SectionHeader
                 title={t("dict.results")}
                 right={
@@ -100,7 +100,7 @@ export function DictionaryResults({
                   </AppText>
                 }
               />
-              <View style={styles.list}>
+              <View className="gap-2">
                 {hits.map((hit, index) => (
                   <ResultRow
                     key={`${hit.lexeme_id}-${hit.homograph_no ?? 0}-${hit.surface_kind}-${index}`}
@@ -111,7 +111,7 @@ export function DictionaryResults({
                 ))}
               </View>
               {/* Nạp nối tiếp theo next_cursor bằng "Tải thêm" (như bản web, không phân trang) */}
-              <View style={styles.footer} testID="dict-results-footer">
+              <View className="items-center gap-2 pt-2" testID="dict-results-footer">
                 {search.hasNextPage ? (
                   <Button
                     label={search.isFetchingNextPage ? t("common.loading") : t("common.loadMore")}
@@ -141,7 +141,7 @@ export function DictionaryResults({
               </View>
             </View>
           ) : (
-            <Card style={styles.section}>
+            <Card className="gap-2">
               <AppText variant="caption" center>
                 {t("dict.noResults", { query })}
               </AppText>
@@ -154,13 +154,3 @@ export function DictionaryResults({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  section: { gap: spacing.sm },
-  center: { alignSelf: "center" },
-  list: { gap: spacing.sm },
-  footer: { alignItems: "center", gap: spacing.sm, paddingTop: spacing.sm },
-  skeleton: { gap: spacing.sm, paddingVertical: spacing.sm },
-  deinflectHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-});

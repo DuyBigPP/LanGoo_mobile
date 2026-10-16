@@ -25,6 +25,7 @@ export interface ButtonProps {
   testID?: string;
   accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 type ReusablesVariant = "default" | "secondary" | "outline" | "ghost" | "destructive";
@@ -111,6 +112,7 @@ export function Button({
   testID,
   accessibilityLabel,
   style,
+  className,
 }: ButtonProps) {
   const theme = useTheme();
   const blocked = disabled || loading;
@@ -137,6 +139,7 @@ export function Button({
     fullWidth ? "self-stretch" : "self-start",
     blocked ? "opacity-100" : null,
     blocked ? DISABLED_CLASS[variant] : VARIANT_CLASS[variant],
+    className,
   );
 
   return (

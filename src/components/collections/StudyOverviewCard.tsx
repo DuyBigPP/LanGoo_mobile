@@ -1,11 +1,11 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Play } from "lucide-react-native";
 import { AppText, Button, Card, Skeleton } from "@/components/ui";
 import type { useSrsStatsQuery } from "@/hooks/use-stats";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 export interface StudyOverviewCardProps {
   stats: ReturnType<typeof useSrsStatsQuery>;
@@ -20,7 +20,7 @@ export function StudyOverviewCard({ stats, onStartAll }: StudyOverviewCardProps)
 
   return (
     <Card testID="study-overview">
-      <View style={styles.grid}>
+      <View className="flex-row flex-wrap gap-y-4">
         <StatCell label={t("study.dueToday")} value={stats.data?.due_now} unit={t("study.cardUnit")} loading={loading} />
         <StatCell label={t("study.learning")} value={stats.data?.learning} unit={t("study.cardUnit")} loading={loading} />
         <StatCell
@@ -41,7 +41,7 @@ export function StudyOverviewCard({ stats, onStartAll }: StudyOverviewCardProps)
         icon={<Play size={18} color={theme.colors.onPrimary} />}
         onPress={onStartAll}
         fullWidth
-        style={styles.startButton}
+        className="mt-4"
         testID="start-study-all"
       />
     </Card>
@@ -62,22 +62,16 @@ function StatCell({
 }) {
   if (loading) {
     return (
-      <View style={styles.cell}>
+      <View className="w-1/2 gap-1">
         <Skeleton width={48} height={24} />
         <Skeleton width={84} height={12} />
       </View>
     );
   }
   return (
-    <View style={styles.cell}>
+    <View className="w-1/2 gap-1">
       <AppText variant="title">{`${formatNumber(value ?? 0)} ${unit}`}</AppText>
       <AppText variant="caption">{label}</AppText>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  grid: { flexDirection: "row", flexWrap: "wrap", rowGap: spacing.lg },
-  cell: { width: "50%", gap: spacing.xs },
-  startButton: { marginTop: spacing.lg },
-});

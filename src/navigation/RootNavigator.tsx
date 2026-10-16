@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { FullScreenLoader } from "@/components/common/FullScreenLoader";
 import { AppText, Button } from "@/components/ui";
@@ -18,7 +18,6 @@ import { ProfileFormScreen } from "@/screens/profile/ProfileFormScreen";
 import { SourcesScreen } from "@/screens/profile/SourcesScreen";
 import { FlashcardScreen } from "@/screens/review/FlashcardScreen";
 import { QuizSessionScreen } from "@/screens/review/QuizSessionScreen";
-import { useTheme } from "@/theme";
 import { MainTabs } from "./MainTabs";
 import type { RootStackParamList } from "./types";
 
@@ -27,18 +26,17 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 /** Không tải được hồ sơ học (mạng / máy chủ đang khởi động) — mirror web guards ProfileLoadError. */
 function ProfileLoadError({ onRetry, retrying }: { onRetry: () => void; retrying: boolean }) {
   const t = useT();
-  const theme = useTheme();
   const { logout } = useAuth();
 
   return (
-    <View style={[styles.error, { backgroundColor: theme.colors.background }]}>
+    <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
       <AppText variant="title" center>
         {t("guards.profileLoadTitle")}
       </AppText>
       <AppText variant="caption" center>
         {t("guards.profileLoadHint")}
       </AppText>
-      <View style={styles.errorActions}>
+      <View className="flex-row gap-2">
         <Button
           label={retrying ? t("guards.retrying") : t("common.retry")}
           loading={retrying}
@@ -134,17 +132,3 @@ export function RootNavigator() {
     </Stack.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  error: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-    padding: 24,
-  },
-  errorActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-});

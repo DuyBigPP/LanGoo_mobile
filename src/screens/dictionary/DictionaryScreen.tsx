@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useT } from "@/i18n";
 import { detectLang, isSingleKanji, type LangMode } from "@/lib/lang";
 import type { MainTabParamList, RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SearchHitDto } from "@/types/dictionary";
 
 type DictionaryScreenProps = BottomTabScreenProps<MainTabParamList, "Dictionary">;
@@ -168,7 +168,7 @@ export function DictionaryScreen({ route }: DictionaryScreenProps) {
 
   /** Ô tra + gợi ý + chuyển tab — dùng chung cho cả hai chế độ cuộn. */
   const topBlock = (
-    <View style={styles.topBlock}>
+    <View className="gap-3">
       <DictionarySearchBar
         input={input}
         onInputChange={setInput}
@@ -203,7 +203,7 @@ export function DictionaryScreen({ route }: DictionaryScreenProps) {
           testID="handwriting-open"
         />
       }
-      contentStyle={styles.screenContent}
+      contentClassName="p-0"
       testID="dictionary-screen"
     >
       {tab === "history" ? (
@@ -219,8 +219,8 @@ export function DictionaryScreen({ route }: DictionaryScreenProps) {
         />
       ) : (
         <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
+          className="flex-1"
+          contentContainerClassName="gap-3 p-4"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -278,10 +278,3 @@ export function DictionaryScreen({ route }: DictionaryScreenProps) {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  screenContent: { padding: 0 },
-  scrollContent: { padding: spacing.lg, gap: spacing.md },
-  topBlock: { gap: spacing.md },
-});

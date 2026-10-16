@@ -1,11 +1,10 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { LookupText } from "@/components/domain/LookupText";
 import { SpeakButton } from "@/components/domain/SpeakButton";
 import { AppText, Card, SectionHeader } from "@/components/ui";
 import { useT } from "@/i18n";
 import { findExampleTarget } from "@/lib/example-highlight";
-import { spacing, useTheme } from "@/theme";
 import type { SenseExampleDto } from "@/types/dictionary";
 
 export interface SenseExamplesProps {
@@ -26,14 +25,14 @@ export function SenseExamples({ examples, surface, onLookup }: SenseExamplesProp
   if (examples.length === 0) return null;
 
   return (
-    <View style={styles.section}>
+    <View className="gap-2">
       <SectionHeader title={t("dict.sectionExample")} />
       {examples.map(example => {
         const translation = exampleTranslation(example);
         return (
-          <Card key={example.id} style={styles.card}>
-            <View style={styles.top}>
-              <View style={styles.text}>
+          <Card key={example.id} className="gap-1">
+            <View className="flex-row items-start gap-2">
+              <View className="flex-1">
                 <AppText variant="body">
                   <ExampleSentence text={example.text} target={surface} onLookup={onLookup} />
                 </AppText>
@@ -63,7 +62,6 @@ function ExampleSentence({
   target: string;
   onLookup: (char: string, index: number) => void;
 }) {
-  const theme = useTheme();
   const range = target ? findExampleTarget(text, target) : null;
   if (!range) return <LookupText text={text} onLookup={onLookup} />;
 
@@ -71,7 +69,7 @@ function ExampleSentence({
   return (
     <>
       <LookupText text={chars.slice(0, range.start).join("")} onLookup={onLookup} />
-      <AppText testID="example-target" weight="semibold" style={{ color: theme.colors.brand }}>
+      <AppText testID="example-target" weight="semibold" className="text-brand">
         <LookupText
           text={chars.slice(range.start, range.end).join("")}
           onLookup={(char, index) => onLookup(char, range.start + index)}
@@ -84,10 +82,3 @@ function ExampleSentence({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { gap: spacing.sm },
-  card: { gap: spacing.xs },
-  top: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
-  text: { flex: 1 },
-});

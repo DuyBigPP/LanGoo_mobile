@@ -11,6 +11,7 @@ import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import { ChevronLeft } from "lucide-react-native";
 import { Text } from "@/components/reusables/text";
 import { useT } from "@/i18n";
+import { cn } from "@/lib/utils";
 import { spacing, useTheme } from "@/theme";
 import { IconButton } from "./IconButton";
 
@@ -26,6 +27,8 @@ export interface ScreenProps {
   /** Trạng thái đang làm mới của RefreshControl. */
   refreshing?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
+  /** Class cho vùng nội dung (ghép đè `p-4` mặc định). */
+  contentClassName?: string;
   testID?: string;
 }
 
@@ -42,6 +45,7 @@ export function Screen({
   onRefresh,
   refreshing = false,
   contentStyle,
+  contentClassName,
   testID,
 }: ScreenProps) {
   const theme = useTheme();
@@ -82,7 +86,7 @@ export function Screen({
       {scroll ? (
         <ScrollView
           className="flex-1"
-          contentContainerClassName="p-4"
+          contentContainerClassName={cn("p-4", contentClassName)}
           contentContainerStyle={[contentStyle, bottomInsetStyle]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -101,7 +105,7 @@ export function Screen({
           {children}
         </ScrollView>
       ) : (
-        <View className="flex-1 p-4" style={[contentStyle, bottomInsetStyle]}>
+        <View className={cn("flex-1 p-4", contentClassName)} style={[contentStyle, bottomInsetStyle]}>
           {children}
         </View>
       )}

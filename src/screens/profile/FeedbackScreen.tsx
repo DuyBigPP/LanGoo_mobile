@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
-  StyleSheet,
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -36,7 +35,7 @@ import {
   type MediaError,
 } from "@/lib/media";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { FeedbackCategory, FeedbackDto } from "@/types/api";
 
 type FeedbackScreenProps = NativeStackScreenProps<RootStackParamList, "Feedback">;
@@ -144,13 +143,13 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen
         title={t("feedback.title")}
         onBack={() => navigation.goBack()}
-        contentStyle={styles.screenContent}
+        contentClassName="p-0"
         testID="feedback-screen"
       >
         {/* FlatList là scroller chính: kéo xuống làm mới + cuộn tới đáy tải thêm */}
@@ -159,11 +158,11 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
           keyExtractor={item => item.id}
           renderItem={renderFeedback}
           ListHeaderComponent={
-            <View style={styles.headerBlock}>
+            <View className="mb-4 gap-4">
               <AppText variant="caption">{t("feedback.subtitle")}</AppText>
 
               {/* Form gửi góp ý: loại + nội dung + ảnh đính kèm */}
-              <Card style={styles.card}>
+              <Card className="gap-3">
                 <AppText variant="label">{t("feedback.category")}</AppText>
                 <SegmentedControl
                   options={CATEGORY_OPTIONS.map(option => ({
@@ -175,7 +174,7 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
                   testID="feedback-category"
                 />
 
-                <View style={styles.contentHeader}>
+                <View className="flex-row items-center justify-between gap-2">
                   <AppText variant="label">{t("feedback.content")}</AppText>
                   <AppText variant="caption">
                     {t("feedback.contentHint", { count: content.length })}
@@ -191,13 +190,13 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
                 />
 
                 <AppText variant="label">{t("feedback.photos")}</AppText>
-                <View style={styles.files}>
+                <View className="flex-row flex-wrap items-center gap-2">
                   {files.map((file, index) => (
                     <View
                       key={`${file.uri}-${index}`}
-                      style={[styles.fileChip, { borderColor: theme.colors.border }]}
+                      className="max-w-[220px] flex-row items-center rounded-lg border border-border pl-2"
                     >
-                      <AppText variant="caption" numberOfLines={1} style={styles.fileName}>
+                      <AppText variant="caption" numberOfLines={1} className="shrink">
                         {file.name}
                       </AppText>
                       <IconButton
@@ -241,13 +240,13 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
           }
           ListEmptyComponent={
             history.isPending ? (
-              <View style={styles.historyLoading}>
+              <View className="gap-2 py-4">
                 <Skeleton height={16} width="45%" />
                 <Skeleton height={12} width="90%" />
                 <Skeleton height={12} width="70%" />
               </View>
             ) : history.isError ? (
-              <AppText variant="caption" center style={styles.historyEmpty}>
+              <AppText variant="caption" center className="p-7">
                 {t("feedback.loadError")}
               </AppText>
             ) : (
@@ -256,11 +255,11 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
           }
           ListFooterComponent={
             history.isFetchingNextPage ? (
-              <View style={styles.footerLoading}>
+              <View className="items-center py-3">
                 <Skeleton height={12} width="60%" />
               </View>
             ) : history.data && !history.hasNextPage && loadedCount > 0 ? (
-              <AppText variant="caption" center style={styles.footerEnd}>
+              <AppText variant="caption" center className="py-3">
                 {t("dict.allLoaded", { count: loadedCount })}
               </AppText>
             ) : null
@@ -281,7 +280,7 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
             />
           }
           // Screen đã đệm đáy tránh home indicator — list chỉ cần padding đều
-          contentContainerStyle={styles.content}
+          contentContainerClassName="p-4"
           testID="feedback-list"
         />
       </Screen>
@@ -292,16 +291,15 @@ export function FeedbackScreen({ navigation }: FeedbackScreenProps) {
 /** Một dòng góp ý: loại + trạng thái + ngày + nội dung + phản hồi admin (nếu có). */
 function FeedbackRow({ item }: { item: FeedbackDto }) {
   const t = useT();
-  const theme = useTheme();
   const status = STATUS_META[item.status] ?? STATUS_META.new;
   const category = CATEGORY_OPTIONS.find(option => option.value === item.category);
 
   return (
-    <View style={styles.feedbackRow} testID="feedback-row">
-      <View style={styles.feedbackHeader}>
+    <View className="gap-2" testID="feedback-row">
+      <View className="flex-row flex-wrap items-center gap-2">
         <AppText variant="label">{category ? t(category.labelKey) : item.category}</AppText>
         <Badge tone={status.tone}>{t(status.labelKey)}</Badge>
-        <AppText variant="caption" style={styles.feedbackDate}>
+        <AppText variant="caption" className="ml-auto">
           {formatDate(item.created_at)}
         </AppText>
       </View>
@@ -316,10 +314,7 @@ function FeedbackRow({ item }: { item: FeedbackDto }) {
 
       {item.admin_note ? (
         <View
-          style={[
-            styles.adminNote,
-            { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.border },
-          ]}
+          className="gap-1 rounded-lg border border-border bg-primary-soft px-3 py-2"
         >
           <AppText variant="label" color="primary">
             {t("feedback.adminNote")}
@@ -330,51 +325,3 @@ function FeedbackRow({ item }: { item: FeedbackDto }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  screenContent: { padding: 0 },
-  content: { padding: spacing.lg },
-  headerBlock: { gap: spacing.lg, marginBottom: spacing.lg },
-  card: { gap: spacing.md },
-  contentHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  files: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  fileChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    maxWidth: 220,
-    borderWidth: 1,
-    borderRadius: spacing.sm,
-    paddingLeft: spacing.sm,
-  },
-  fileName: { flexShrink: 1 },
-  historyLoading: { gap: spacing.sm, paddingVertical: spacing.lg },
-  historyEmpty: { padding: spacing.xxl },
-  footerLoading: { alignItems: "center", paddingVertical: spacing.md },
-  footerEnd: { paddingVertical: spacing.md },
-  feedbackRow: { gap: spacing.sm },
-  feedbackHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  feedbackDate: { marginLeft: "auto" },
-  adminNote: {
-    borderWidth: 1,
-    borderRadius: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-});

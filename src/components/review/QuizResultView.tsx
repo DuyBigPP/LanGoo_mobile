@@ -1,9 +1,9 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { CheckCircle2, XCircle } from "lucide-react-native";
 import { AppText, Button, Card, Chip, Screen, SectionHeader, Skeleton } from "@/components/ui";
 import { useT } from "@/i18n";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { QuizItem } from "./quiz-model";
 
 export interface QuizResultViewProps {
@@ -41,7 +41,7 @@ export function QuizResultView({
       title={t("review.summaryTitle")}
       onBack={onBack}
       scroll
-      contentStyle={styles.content}
+      contentClassName="gap-3"
       testID="quiz-result"
     >
       <Card>
@@ -52,13 +52,13 @@ export function QuizResultView({
               ? t("review.kindPractice")
               : t("review.kindReview")}
         </Chip>
-        <View style={styles.scoreCell}>
+        <View className="gap-1">
           <AppText variant="caption">{t("review.score")}</AppText>
           <AppText variant="title">
             {score != null ? `${Math.round(score)} ${t("review.scoreUnit")}` : "—"}
           </AppText>
         </View>
-        <View style={styles.scoreCell}>
+        <View className="gap-1">
           <AppText variant="title" testID="quiz-result-score">
             {`${correctCount}/${itemCount}`}
           </AppText>
@@ -70,19 +70,19 @@ export function QuizResultView({
       <Card>
         <SectionHeader title={t("review.wrongAnswers")} count={wrongItems.length} />
         {wrongLoading ? (
-          <View style={styles.wrongLoading}>
+          <View className="gap-2">
             <Skeleton height={16} width="70%" />
             <Skeleton height={16} width="50%" />
           </View>
         ) : wrongItems.length === 0 ? (
-          <View style={styles.noWrong}>
+          <View className="flex-row items-center justify-center gap-2 py-4">
             <CheckCircle2 size={18} color={theme.colors.primary} />
             <AppText variant="caption">{t("review.noWrong")}</AppText>
           </View>
         ) : (
           wrongItems.map(item => (
-            <View key={item.id} style={styles.wrongRow}>
-              <View style={styles.wrongInfo}>
+            <View key={item.id} className="flex-row items-start justify-between gap-2 py-2">
+              <View className="flex-1 gap-0.5">
                 <AppText variant="body" weight="semibold" numberOfLines={2}>
                   {item.promptText}
                 </AppText>
@@ -112,24 +112,3 @@ export function QuizResultView({
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { gap: spacing.md },
-  scoreCell: { gap: spacing.xs },
-  wrongLoading: { gap: spacing.sm },
-  noWrong: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.lg,
-  },
-  wrongRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  wrongInfo: { flex: 1, gap: 2 },
-});

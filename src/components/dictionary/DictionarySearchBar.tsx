@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Search, X } from "lucide-react-native";
 import {
   AppText,
@@ -14,7 +14,7 @@ import {
 import { useT } from "@/i18n";
 import { posLabel } from "@/lib/dictionary-labels";
 import type { detectLang, LangMode } from "@/lib/lang";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SearchHitDto } from "@/types/dictionary";
 
 /** Một gợi ý: kết quả trực tiếp, hoặc thể gốc suy ra từ dạng chia (`inflected`). */
@@ -52,7 +52,7 @@ export function DictionarySearchBar({
   const theme = useTheme();
 
   return (
-    <View style={styles.block}>
+    <View className="gap-3">
       <Input
         value={input}
         onChangeText={onInputChange}
@@ -94,7 +94,7 @@ export function DictionarySearchBar({
       />
       {/* Chế độ tự động: chip báo ngôn ngữ đã nhận diện (như web) */}
       {langMode === "auto" && detectedInput ? (
-        <View style={styles.detectedRow}>
+        <View className="flex-row">
           <Chip testID="dict-detected">
             {t("dict.detected", {
               lang:
@@ -116,8 +116,7 @@ export function DictionarySearchBar({
               accessibilityRole="button"
               accessibilityLabel={entry.hit.surface}
               testID={`dict-suggestion-${index}`}
-              className="active:opacity-85"
-              style={styles.suggestionRow}
+              className="min-h-[48px] flex-row items-center gap-2 px-3 py-2 active:opacity-85"
             >
               <Flag code="jp" size="sm" />
               <AppText variant="body" weight="medium" numberOfLines={1}>
@@ -132,7 +131,7 @@ export function DictionarySearchBar({
                 <Chip testID="dict-suggestion-inflected">{t("dict.deinflectChip")}</Chip>
               ) : null}
               {posLabel(entry.hit.pos) ? (
-                <View style={styles.suggestionPos}>
+                <View className="ml-auto">
                   <Chip>{posLabel(entry.hit.pos)}</Chip>
                 </View>
               ) : null}
@@ -143,17 +142,3 @@ export function DictionarySearchBar({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  block: { gap: spacing.md },
-  detectedRow: { flexDirection: "row" },
-  suggestionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    minHeight: 48,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  suggestionPos: { marginLeft: "auto" },
-});

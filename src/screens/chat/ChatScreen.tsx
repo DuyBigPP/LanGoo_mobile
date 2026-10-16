@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { FlatList, KeyboardAvoidingView, Platform, View } from "react-native";
 import { useBottomTabBarHeight, type BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { Bot, List, MessageSquarePlus } from "lucide-react-native";
 import { ApiError } from "@/api/client";
@@ -45,7 +45,7 @@ import {
   type LocalImage,
 } from "@/lib/media";
 import type { MainTabParamList } from "@/navigation/types";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { ChatMessageDto, ChatSessionDto } from "@/types/api";
 
 type ChatScreenProps = BottomTabScreenProps<MainTabParamList, "Chat">;
@@ -202,12 +202,12 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
   // Trạng thái rỗng của khung tin nhắn (chưa chọn phiên / phiên trống / đang tải / lỗi)
   const emptyContent =
     messages.isPending && sessionId ? (
-      <View style={styles.skeletonWrap}>
-        <Skeleton height={56} width="70%" radius={radius.lg} />
-        <Skeleton height={56} width="55%" radius={radius.lg} style={styles.skeletonRight} />
+      <View className="gap-3 py-4">
+        <Skeleton height={56} width="70%" className="rounded-lg" />
+        <Skeleton height={56} width="55%" className="self-end rounded-lg" />
       </View>
     ) : messages.isError ? (
-      <View style={styles.emptyWrap}>
+      <View className="flex-1 justify-center gap-3 py-5">
         <AppText variant="caption" center>
           {t("chat.messagesLoadError")}
         </AppText>
@@ -216,19 +216,19 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
           variant="outline"
           size="sm"
           onPress={() => void messages.refetch()}
-          style={styles.emptyAction}
+          className="self-center"
           testID="chat-messages-retry"
         />
       </View>
     ) : sessionId ? (
-      <View style={styles.emptyWrap}>
+      <View className="flex-1 justify-center gap-3 py-5">
         <AppText variant="caption" center>
           {t("chat.emptySession")}
         </AppText>
         <SuggestionChips suggestions={suggestions} onPick={setDraft} />
       </View>
     ) : (
-      <View style={styles.emptyWrap}>
+      <View className="flex-1 justify-center gap-3 py-5">
         <EmptyState
           icon={<Bot size={30} color={theme.colors.primary} />}
           title={t("chat.askAnything")}
@@ -240,21 +240,21 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={tabBarHeight}
     >
       <Screen
         title={t("chat.title")}
         right={headerRight}
-        contentStyle={styles.screenContent}
+        contentClassName="p-0"
         testID="chat-screen"
       >
-        <View style={styles.flex}>
+        <View className="flex-1">
           {/* Dòng phụ: phiên đang mở (kèm chip kịch bản) + số lượt chat đã dùng */}
-          <View style={[styles.metaRow, { borderBottomColor: theme.colors.border }]}>
-            <View style={styles.metaSession}>
-              <AppText variant="caption" numberOfLines={1} style={styles.metaTitle}>
+          <View className="flex-row items-center justify-between gap-2 border-b-hairline border-border px-4 py-2">
+            <View className="flex-1 flex-row items-center gap-2">
+              <AppText variant="caption" numberOfLines={1} className="shrink">
                 {activeSession
                   ? sessionTitle(activeSession.title, t("chat.untitled"))
                   : t("chat.newConversation")}
@@ -282,8 +282,8 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
                 images={item.role === "user" ? stream.sentImages[item.id] : undefined}
               />
             )}
-            style={styles.list}
-            contentContainerStyle={styles.listContent}
+            className="flex-1"
+            contentContainerClassName="grow gap-3 px-4 py-3"
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
             onContentSizeChange={scrollToEnd}
@@ -343,30 +343,3 @@ export function ChatScreen({ route, navigation }: ChatScreenProps) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  screenContent: { padding: 0 },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  metaTitle: { flexShrink: 1 },
-  metaSession: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  list: { flex: 1 },
-  listContent: {
-    flexGrow: 1,
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  emptyWrap: { flex: 1, justifyContent: "center", gap: spacing.md, paddingVertical: spacing.xl },
-  emptyAction: { alignSelf: "center" },
-  skeletonWrap: { gap: spacing.md, paddingVertical: spacing.lg },
-  skeletonRight: { alignSelf: "flex-end" },
-});

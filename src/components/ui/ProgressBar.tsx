@@ -10,6 +10,7 @@ export interface ProgressBarProps {
   color?: string;
   trackColor?: string;
   style?: StyleProp<ViewStyle>;
+  className?: string;
   testID?: string;
 }
 
@@ -24,6 +25,7 @@ export function ProgressBar({
   color,
   trackColor,
   style,
+  className,
   testID,
 }: ProgressBarProps) {
   const clamped = Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
@@ -35,7 +37,7 @@ export function ProgressBar({
       testID={testID}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: percent }}
-      className={cn("w-full", !trackColor && "bg-border")}
+      className={cn("w-full", !trackColor && "bg-border", className)}
       // Màu fill động (prop `color`) truyền qua CSS var — reusables chỉ nhận class cho indicator
       indicatorClassName={color ? "bg-[--progress-fill]" : "bg-primary"}
       style={[

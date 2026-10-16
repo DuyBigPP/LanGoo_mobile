@@ -1,5 +1,5 @@
 import * as React from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Minus, Plus } from "lucide-react-native";
@@ -24,7 +24,7 @@ import {
 } from "@/hooks/use-profile";
 import { useT } from "@/i18n";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 type OnboardingScreenProps = NativeStackScreenProps<RootStackParamList, "Onboarding">;
 
@@ -95,16 +95,16 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen
         title={t("onboarding.title")}
         scroll
-        contentStyle={styles.content}
+        contentClassName="gap-4 py-5"
         testID="onboarding-screen"
       >
-        <View style={styles.header}>
+        <View className="gap-2">
           <AppText variant="body" weight="medium">
             {t("onboarding.greeting", { name: userName })}
           </AppText>
@@ -114,10 +114,10 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
           <ProgressBar value={(step + 1) / STEP_COUNT} testID="onboarding-progress" />
         </View>
 
-        <Card style={styles.card}>
+        <Card className="gap-3">
           {step === 0 ? (
             /* Bước 1: tên hồ sơ (để trống sẽ dùng tên mặc định Học tiếng Nhật) */
-            <View style={styles.stepBody}>
+            <View className="gap-2">
               <AppText variant="label">{t("onboarding.profileName")}</AppText>
               <Input
                 value={name}
@@ -131,11 +131,11 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
             </View>
           ) : (
             /* Bước 2: mục tiêu thẻ/ngày — preset + nút tăng/giảm thay cho Slider */
-            <View style={styles.stepBody}>
+            <View className="gap-2">
               <AppText variant="label">{t("onboarding.studySetupQuestion")}</AppText>
               <AppText variant="caption">{t("onboarding.goalHint")}</AppText>
 
-              <View style={styles.presets}>
+              <View className="mt-1 flex-row flex-wrap gap-2">
                 {GOAL_PRESETS.map(preset => (
                   <Button
                     key={preset}
@@ -148,7 +148,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
                 ))}
               </View>
 
-              <View style={styles.stepper}>
+              <View className="mt-2 flex-row items-center justify-center gap-5">
                 <IconButton
                   icon={<Minus size={20} color={theme.colors.text} />}
                   onPress={() => adjustGoal(-GOAL_STEP)}
@@ -158,7 +158,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
                   disabled={goal <= GOAL_MIN}
                   testID="onboarding-goal-minus"
                 />
-                <View style={styles.stepperValue}>
+                <View className="items-center gap-0.5">
                   <AppText size="xxl" weight="bold">
                     {String(goal)}
                   </AppText>
@@ -178,7 +178,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
           )}
         </Card>
 
-        <View style={styles.footer}>
+        <View className="flex-row flex-wrap items-center justify-between gap-2">
           {step > 0 ? (
             <Button
               label={t("onboarding.back")}
@@ -198,7 +198,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
               testID="onboarding-next"
             />
           ) : (
-            <View style={styles.footerRight}>
+            <View className="ml-auto flex-row flex-wrap items-center justify-end gap-2">
               <Button
                 label={t("onboarding.skipSetup")}
                 variant="ghost"
@@ -220,40 +220,3 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { gap: spacing.lg, paddingVertical: spacing.xl },
-  header: { gap: spacing.sm },
-  card: { gap: spacing.md },
-  stepBody: { gap: spacing.sm },
-  presets: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  stepper: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xl,
-    marginTop: spacing.sm,
-  },
-  stepperValue: { alignItems: "center", gap: 2 },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  footerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginLeft: "auto",
-  },
-});

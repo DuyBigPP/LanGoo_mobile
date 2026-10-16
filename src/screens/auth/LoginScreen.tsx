@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Image, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Eye, EyeOff, X } from "lucide-react-native";
 import { ApiError } from "@/api/client";
@@ -17,7 +17,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useT } from "@/i18n";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, "Login">;
 
@@ -82,12 +82,12 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen
         right={
-          <View style={styles.headerRight}>
+          <View className="flex-row items-center gap-2">
             <LanguageToggle />
             <IconButton
               icon={<X size={20} color={theme.colors.textMuted} />}
@@ -98,14 +98,14 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           </View>
         }
         scroll
-        contentStyle={styles.content}
+        contentClassName="justify-center gap-4 py-7"
         testID="login-screen"
       >
         {/* Đầu màn: thương hiệu + dòng giới thiệu ngắn */}
-        <View style={styles.brand}>
+        <View className="items-center gap-1">
           <Image
             source={require("../../../assets/logo.png")}
-            style={styles.logo}
+            className="h-[60px] w-40"
             resizeMode="contain"
             accessibilityLabel="Langoo"
           />
@@ -114,7 +114,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           </AppText>
         </View>
 
-        <Card style={styles.card}>
+        <Card className="gap-3">
           <AppText variant="title">{t("auth.loginTitle")}</AppText>
 
           <Input
@@ -173,7 +173,7 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
           />
         </Card>
 
-        <View style={styles.footer}>
+        <View className="flex-row flex-wrap items-center justify-center gap-1">
           <AppText variant="caption">{t("auth.noAccount")}</AppText>
           <Button
             label={t("auth.registerNow")}
@@ -191,23 +191,3 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: {
-    justifyContent: "center",
-    gap: spacing.lg,
-    paddingVertical: spacing.xxl,
-  },
-  brand: { gap: spacing.xs, alignItems: "center" },
-  logo: { width: 160, height: 60 },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  card: { gap: spacing.md },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-});

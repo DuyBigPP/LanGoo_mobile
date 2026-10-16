@@ -220,7 +220,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
         </AppText>
       }
       scroll
-      contentStyle={styles.content}
+      contentClassName="gap-3"
       testID="flashcard-screen"
     >
       <ProgressBar value={progress} testID="flash-progress-bar" />
@@ -234,16 +234,14 @@ export function FlashcardScreen({ navigation, route }: Props) {
         </AppText>
       ) : null}
 
-      <View
-        style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
-      >
+      <View className="rounded-lg border border-border bg-card p-4">
         {due.isPending ? (
-          <View style={styles.loading}>
-            <Skeleton height={300} radius={radius.lg} />
+          <View className="gap-3">
+            <Skeleton height={300} className="rounded-lg" />
             <Skeleton height={16} width="55%" />
           </View>
         ) : due.isError ? (
-          <View style={styles.centerBox}>
+          <View className="items-center justify-center gap-2 py-7">
             <AppText variant="body" center>
               {t("review.flashQueueError")}
             </AppText>
@@ -256,7 +254,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
             />
           </View>
         ) : finished ? (
-          <View style={styles.centerBox} testID="flash-done">
+          <View className="items-center justify-center gap-2 py-7" testID="flash-done">
             <CheckCircle2 size={28} color={theme.colors.primary} />
             <AppText variant="subtitle" center>
               {answered > 0
@@ -266,7 +264,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
             <AppText variant="caption" center>
               {answered > 0 ? t("review.flashDoneHint") : t("review.flashEmptyHint")}
             </AppText>
-            <View style={styles.doneActions}>
+            <View className="mt-2 flex-row flex-wrap justify-center gap-2">
               <Button
                 label={t("review.studyMore")}
                 variant="outline"
@@ -282,15 +280,15 @@ export function FlashcardScreen({ navigation, route }: Props) {
           </View>
         ) : !card ? (
           // Đang nối tiếp trang sau / kiểm tra lại hàng đợi
-          <View style={styles.loading} testID="flash-loading-next">
-            <Skeleton height={300} radius={radius.lg} />
+          <View className="gap-3" testID="flash-loading-next">
+            <Skeleton height={300} className="rounded-lg" />
           </View>
         ) : (
-          <View style={styles.player}>
+          <View className="gap-4">
             <FlipCard card={card} flipped={flipped} onFlip={() => setFlipped(value => !value)} />
 
             {flipped ? (
-              <View style={styles.ratingRow}>
+              <View className="flex-row flex-wrap gap-2">
                 {RATING_OPTIONS.map(option => (
                   <Button
                     key={option.rating}
@@ -299,7 +297,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
                     size="sm"
                     onPress={() => submit(option.rating)}
                     disabled={review.isPending}
-                    style={styles.ratingButton}
+                    className="grow basis-[45%]"
                     testID={`flash-rating-${option.rating}`}
                   />
                 ))}
@@ -350,6 +348,7 @@ function FlipCard({
     outputRange: ["180deg", "360deg"],
   });
 
+  // Mặt thẻ là Animated.View (transform xoay) nên giữ style object
   const faceStyle = { backgroundColor: theme.colors.card, borderColor: theme.colors.border };
 
   return (
@@ -358,7 +357,7 @@ function FlipCard({
       accessibilityRole="button"
       accessibilityLabel={flipped ? t("review.flipBack") : t("review.flipReveal")}
       testID="flash-card"
-      style={styles.flipWrap}
+      className="h-[300px]"
     >
       {/* Mặt trước: từ tiếng Nhật */}
       <Animated.View
@@ -380,7 +379,7 @@ function FlipCard({
             {card.prompt.reading}
           </AppText>
         ) : null}
-        <View style={styles.speakRow}>
+        <View className="mt-1 flex-row justify-center">
           <SpeakButton
             text={card.prompt.text}
             lang={toSpeakLang(card.language.code)}
@@ -404,7 +403,7 @@ function FlipCard({
         <AppText variant="title" center numberOfLines={4}>
           {card.answer.text}
         </AppText>
-        <View style={styles.speakRow}>
+        <View className="mt-1 flex-row justify-center">
           <SpeakButton text={card.answer.text} lang="vi" testID="flash-speak-back" />
         </View>
       </Animated.View>
@@ -413,28 +412,6 @@ function FlipCard({
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing.md },
-  card: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-  },
-  loading: { gap: spacing.md },
-  centerBox: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.xxl,
-  },
-  doneActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  player: { gap: spacing.lg },
-  flipWrap: { height: 300 },
   flipFace: {
     position: "absolute",
     top: 0,
@@ -449,11 +426,4 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     backfaceVisibility: "hidden",
   },
-  speakRow: { flexDirection: "row", justifyContent: "center", marginTop: spacing.xs },
-  ratingRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  ratingButton: { flexGrow: 1, flexBasis: "45%" },
 });

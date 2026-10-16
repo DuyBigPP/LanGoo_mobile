@@ -1,11 +1,11 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Archive, NotebookText, Pencil, Play } from "lucide-react-native";
 import { ActionMenu, AppText, Button, Card, Chip } from "@/components/ui";
 import { useT } from "@/i18n";
 import { collectionKindLabel } from "@/lib/dictionary-labels";
 import { formatDate, formatNumber } from "@/lib/format";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { CollectionDto } from "@/types/api";
 
 export interface NotebookCardProps {
@@ -23,17 +23,12 @@ export function NotebookCard({ collection, onOpen, onStudy, onRename, onArchive 
   const count = formatNumber(collection.visible_item_count ?? collection.item_count);
 
   return (
-    <Card onPress={onOpen} testID={`collection-row-${collection.id}`} style={styles.card}>
-      <View style={styles.top}>
-        <View
-          style={[
-            styles.icon,
-            { borderColor: theme.colors.border, backgroundColor: theme.colors.primarySoft },
-          ]}
-        >
+    <Card onPress={onOpen} testID={`collection-row-${collection.id}`} className="gap-3">
+      <View className="flex-row items-center gap-3">
+        <View className="h-9 w-9 items-center justify-center rounded-md border border-border bg-primary-soft">
           <NotebookText size={18} color={theme.colors.primary} />
         </View>
-        <View style={styles.info}>
+        <View className="flex-1 gap-1">
           <AppText variant="body" weight="semibold" numberOfLines={1}>
             {collection.name}
           </AppText>
@@ -63,8 +58,8 @@ export function NotebookCard({ collection, onOpen, onStudy, onRename, onArchive 
         />
       </View>
 
-      <View style={styles.footer}>
-        <AppText variant="caption" numberOfLines={1} style={styles.meta}>
+      <View className="flex-row items-center gap-2">
+        <AppText variant="caption" numberOfLines={1} className="flex-1">
           {`${t("study.wordsCount", { count })} · ${formatDate(collection.created_at)}`}
         </AppText>
         {/* Học nhanh ngay trên thẻ — mở sheet chọn hình thức học cho sổ này */}
@@ -80,19 +75,3 @@ export function NotebookCard({ collection, onOpen, onStudy, onRename, onArchive 
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { gap: spacing.md },
-  top: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  icon: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-  info: { flex: 1, gap: spacing.xs },
-  footer: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  meta: { flex: 1 },
-});

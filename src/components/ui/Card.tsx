@@ -11,6 +11,7 @@ export interface CardProps {
   accessibilityLabel?: string;
   testID?: string;
   style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 /** Màu ripple Android khi thẻ bấm được: chàm mờ trên nền sáng, trắng mờ trên nền tối. */
@@ -20,8 +21,7 @@ const RIPPLE_ON_DARK = "rgba(255, 255, 255, 0.14)";
 /**
  * Khối nội dung bo góc — nền card + viền mảnh; có `onPress` thì thành nút bấm.
  * Dựng thẳng View (+ TextClassContext của Reusables Card) thay vì bọc ReusablesCard: Card gốc có `gap-6`,
- * nếu đè bằng class `gap-0` thì nó thắng cả `style={{ gap }}` mà các màn truyền vào → nội dung dính nhau.
- * Không đặt class gap nào ở đây để `style.gap` của màn hình có tác dụng.
+ * không đặt class gap mặc định; màn hình tự truyền `className` (vd `gap-3`) — được ghép bằng `cn`.
  */
 export function Card({
   children,
@@ -30,11 +30,13 @@ export function Card({
   accessibilityLabel,
   testID,
   style,
+  className,
 }: CardProps) {
   const theme = useTheme();
   const cardClass = cn(
     "flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-black/5",
     padded && "p-4",
+    className,
   );
 
   if (!onPress) {

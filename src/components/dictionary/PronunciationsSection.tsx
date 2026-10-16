@@ -1,7 +1,6 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { AppText, Chip, SectionHeader } from "@/components/ui";
 import { useT } from "@/i18n";
-import { spacing } from "@/theme";
 import type { SenseDetailDto } from "@/types/dictionary";
 
 /** Một cách đọc của từ (mirror SensePronunciationDto bên web). */
@@ -24,17 +23,17 @@ export function PronunciationsSection({ pronunciations }: PronunciationsSectionP
   const hasData = pronunciations.some(item => item.ipa || item.dialect);
 
   return (
-    <View style={styles.section} testID="sense-pronunciations">
+    <View className="gap-2" testID="sense-pronunciations">
       <SectionHeader title={t("dict.sectionPronunciation")} />
       {hasData ? (
-        <View style={styles.chipRow}>
+        <View className="flex-row flex-wrap items-center gap-2">
           {pronunciations.map(pronunciation => (
             <Chip key={pronunciation.id}>
               {pronunciation.ipa ? (
                 <AppText size="sm">{`/${pronunciation.ipa}/`}</AppText>
               ) : null}
               {pronunciation.dialect ? (
-                <AppText size="xs" color="muted" style={styles.dialect}>
+                <AppText size="xs" color="muted" className="uppercase tracking-[0.6px]">
                   {pronunciation.dialect}
                 </AppText>
               ) : null}
@@ -47,9 +46,3 @@ export function PronunciationsSection({ pronunciations }: PronunciationsSectionP
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: { gap: spacing.sm },
-  chipRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  dialect: { textTransform: "uppercase", letterSpacing: 0.6 },
-});

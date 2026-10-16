@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/ui/Text";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -15,30 +15,18 @@ export function FullScreenLoader({ label }: { label?: string }) {
     return () => clearTimeout(id);
   }, []);
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View className="flex-1 items-center justify-center gap-3 bg-background">
       <ActivityIndicator size="large" color={theme.colors.primary} />
       {label ? (
-        <AppText variant="caption" color="muted" style={styles.label}>
+        <AppText variant="caption" color="muted" className="mt-1">
           {label}
         </AppText>
       ) : null}
       {waking ? (
-        <AppText variant="caption" color="muted" center style={styles.label}>
+        <AppText variant="caption" color="muted" center className="mt-1">
           {t("guards.serverWaking")}
         </AppText>
       ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  label: {
-    marginTop: 4,
-  },
-});

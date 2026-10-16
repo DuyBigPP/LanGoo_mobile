@@ -1,5 +1,5 @@
 import React from "react";
-import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 import { HistoryRow } from "@/components/dictionary/HistoryRow";
 import {
   AppText,
@@ -12,7 +12,7 @@ import {
 import type { useSearchHistory } from "@/hooks/use-dictionary";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { SearchHistoryItemDto } from "@/types/dictionary";
 
 export interface DictionaryHistoryListProps {
@@ -69,14 +69,14 @@ export function DictionaryHistoryList({
         ) : history.isLoading ? (
           <Card testID="dict-history-loading">
             {[0, 1, 2, 3].map(index => (
-              <View key={index} style={styles.skeleton}>
+              <View key={index} className="gap-2 py-2">
                 <Skeleton height={14} width="45%" />
                 <Skeleton height={12} width="35%" />
               </View>
             ))}
           </Card>
         ) : history.isError ? (
-          <Card style={styles.section}>
+          <Card className="gap-2">
             <AppText variant="caption" center>
               {t("dict.loadError")}
             </AppText>
@@ -85,7 +85,7 @@ export function DictionaryHistoryList({
               variant="outline"
               size="sm"
               onPress={() => void history.refetch()}
-              style={styles.center}
+              className="self-center"
             />
           </Card>
         ) : (
@@ -99,7 +99,7 @@ export function DictionaryHistoryList({
           </AppText>
         ) : null
       }
-      contentContainerStyle={styles.content}
+      contentContainerClassName="gap-3 p-4"
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       onEndReached={onShowMore}
@@ -118,10 +118,3 @@ export function DictionaryHistoryList({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  content: { padding: spacing.lg, gap: spacing.md },
-  section: { gap: spacing.sm },
-  center: { alignSelf: "center" },
-  skeleton: { gap: spacing.sm, paddingVertical: spacing.sm },
-});

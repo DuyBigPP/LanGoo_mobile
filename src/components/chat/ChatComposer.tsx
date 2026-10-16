@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Image, StyleSheet, TextInput, View } from "react-native";
+import { Image, TextInput, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { ImagePlus, SendHorizontal, Square, X } from "lucide-react-native";
 import { AppText, Button, IconButton } from "@/components/ui";
 import { useT } from "@/i18n";
 import { CHAT_IMAGE_MAX_COUNT, type LocalImage } from "@/lib/media";
-import { fontSize, radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 export interface ChatComposerProps {
   draft: string;
@@ -37,19 +38,14 @@ export function ChatComposer({
   const [inputFocused, setInputFocused] = React.useState(false);
 
   return (
-    <View
-      style={[
-        styles.composer,
-        { borderTopColor: theme.colors.border, backgroundColor: theme.colors.card },
-      ]}
-    >
+    <View className="gap-2 border-t-hairline border-border bg-card px-4 pb-3 pt-2">
       {images.length > 0 ? (
-        <View style={styles.previews}>
+        <View className="flex-row flex-wrap items-center gap-2">
           {images.map((image, index) => (
-            <View key={`${image.uri}-${index}`} style={styles.previewWrap}>
+            <View key={`${image.uri}-${index}`} className="relative">
               <Image
                 source={{ uri: image.uri }}
-                style={[styles.previewImage, { borderColor: theme.colors.border }]}
+                className="h-16 w-16 rounded-md border border-border"
               />
               <IconButton
                 icon={<X size={12} color={theme.colors.text} />}
@@ -57,7 +53,7 @@ export function ChatComposer({
                 accessibilityLabel={t("chat.imageRemove")}
                 size="sm"
                 variant="outline"
-                style={[styles.previewRemove, { backgroundColor: theme.colors.card }]}
+                className="absolute -right-1.5 -top-1.5 h-[22px] w-[22px] rounded-full bg-card"
                 testID={`chat-image-remove-${index}`}
               />
             </View>
@@ -68,14 +64,14 @@ export function ChatComposer({
         </View>
       ) : null}
 
-      <View style={styles.row}>
+      <View className="flex-row items-end gap-2">
         <IconButton
           icon={<ImagePlus size={20} color={theme.colors.text} />}
           onPress={onPickImages}
           accessibilityLabel={t("chat.attachImage")}
           variant="outline"
           disabled={streaming || creating || images.length >= CHAT_IMAGE_MAX_COUNT}
-          style={styles.button}
+          className="self-end"
           testID="chat-attach-image"
         />
         <TextInput
@@ -89,14 +85,12 @@ export function ChatComposer({
           onFocus={() => setInputFocused(true)}
           onBlur={() => setInputFocused(false)}
           testID="chat-input"
-          style={[
-            styles.input,
-            {
-              backgroundColor: theme.colors.card,
-              borderColor: inputFocused ? theme.colors.primary : theme.colors.border,
-              color: theme.colors.text,
-            },
-          ]}
+          className={cn(
+            "max-h-[120px] min-h-[44px] flex-1 rounded-md border-[1.5px] bg-card px-3 py-2.5 text-base text-foreground",
+            inputFocused ? "border-primary" : "border-border",
+          )}
+          // textAlignVertical là style riêng Android, Tailwind không có utility
+          style={{ textAlignVertical: "top" }}
         />
         {streaming ? (
           <Button
@@ -105,7 +99,7 @@ export function ChatComposer({
             size="sm"
             icon={<Square size={14} color={theme.colors.text} />}
             onPress={onStop}
-            style={styles.button}
+            className="self-end"
             testID="chat-stop"
           />
         ) : (
@@ -116,7 +110,7 @@ export function ChatComposer({
             onPress={onSend}
             disabled={!draft.trim()}
             loading={creating}
-            style={styles.button}
+            className="self-end"
             testID="chat-send"
           />
         )}
@@ -124,38 +118,3 @@ export function ChatComposer({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  composer: {
-    gap: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  row: { flexDirection: "row", alignItems: "flex-end", gap: spacing.sm },
-  input: {
-    flex: 1,
-    minHeight: 44,
-    maxHeight: 120,
-    borderWidth: 1.5,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingTop: 10,
-    paddingBottom: 10,
-    fontSize: fontSize.md,
-    textAlignVertical: "top",
-  },
-  button: { alignSelf: "flex-end" },
-  previews: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  previewWrap: { position: "relative" },
-  previewImage: { width: 64, height: 64, borderRadius: radius.md, borderWidth: 1 },
-  previewRemove: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    width: 22,
-    height: 22,
-    borderRadius: radius.pill,
-  },
-});

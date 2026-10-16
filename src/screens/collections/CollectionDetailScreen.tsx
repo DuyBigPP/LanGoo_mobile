@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ApiError } from "@/api/client";
 import { CollectionHeaderCard } from "@/components/collections/CollectionHeaderCard";
@@ -33,7 +33,7 @@ import { useTagsQuery } from "@/hooks/use-tags";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { ItemResponseDto, TagDto } from "@/types/api";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
@@ -134,7 +134,7 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
   // Sổ tay không tồn tại / lỗi tải
   if (collection.isError) {
     return (
-      <Screen onBack={() => navigation.goBack()} testID="collection-detail" contentStyle={styles.content}>
+      <Screen onBack={() => navigation.goBack()} testID="collection-detail" contentClassName="gap-4">
         <Card>
           <EmptyState
             title={t("study.notFound")}
@@ -152,7 +152,7 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
 
   // Đầu danh sách: thông tin sổ tay + sắp xếp + tiêu đề mục
   const listHeader = (
-    <View style={styles.headerBlock}>
+    <View className="gap-4">
       <CollectionHeaderCard
         name={displayName}
         kind={collectionData?.kind}
@@ -166,7 +166,7 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
         onArchive={() => setArchiveOpen(true)}
       />
 
-      <View style={styles.sortRow}>
+      <View className="gap-1">
         <AppText variant="label">{t("study.sort")}</AppText>
         <SegmentedControl
           options={sortOptions}
@@ -182,16 +182,16 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
 
   // Trạng thái rỗng khi chưa tải xong / lỗi / sổ tay không có từ
   const listEmpty = itemsQuery.isPending ? (
-    <View style={styles.list}>
+    <View className="gap-2">
       {Array.from({ length: 4 }).map((_, index) => (
-        <Card key={index} style={styles.skeletonCard}>
+        <Card key={index} className="gap-2">
           <Skeleton height={20} width="45%" />
           <Skeleton height={14} width="70%" />
         </Card>
       ))}
     </View>
   ) : itemsQuery.isError ? (
-    <Card style={styles.errorCard}>
+    <Card className="gap-2">
       <AppText variant="caption" center>
         {t("study.loadError")}
       </AppText>
@@ -200,7 +200,7 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
         variant="outline"
         size="sm"
         onPress={() => void itemsQuery.refetch()}
-        style={styles.retry}
+        className="self-center"
         testID="items-retry"
       />
     </Card>
@@ -219,17 +219,17 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
   // Chân danh sách: đang nạp thêm / đã hiện tất cả
   const listFooter =
     sortedItems.length === 0 ? null : itemsQuery.isFetchingNextPage ? (
-      <View style={styles.footer} testID="items-loading-more">
+      <View className="items-center py-3" testID="items-loading-more">
         <ActivityIndicator size="small" color={theme.colors.primary} />
       </View>
     ) : !itemsQuery.hasNextPage ? (
-      <AppText variant="caption" center style={styles.footerText} testID="items-all-loaded">
+      <AppText variant="caption" center className="py-3" testID="items-all-loaded">
         {t("dict.allLoaded", { count: formatNumber(sortedItems.length) })}
       </AppText>
     ) : null;
 
   return (
-    <Screen onBack={() => navigation.goBack()} testID="collection-detail" contentStyle={styles.screenContent}>
+    <Screen onBack={() => navigation.goBack()} testID="collection-detail" contentClassName="p-0">
       <FlatList
         data={sortedItems}
         keyExtractor={item => item.id}
@@ -246,7 +246,7 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
         ListFooterComponent={listFooter}
         ListEmptyComponent={listEmpty}
         ItemSeparatorComponent={ListSeparator}
-        contentContainerStyle={styles.content}
+        contentContainerClassName="gap-4 p-4"
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.4}
         keyboardShouldPersistTaps="handled"
@@ -317,19 +317,6 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
 
 /** Khoảng cách giữa các hàng trong danh sách (thay cho gap của ScrollView). */
 function ListSeparator() {
-  return <View style={styles.separator} />;
+  return <View className="h-2" />;
 }
 
-const styles = StyleSheet.create({
-  screenContent: { padding: 0 },
-  content: { padding: spacing.lg, gap: spacing.lg },
-  headerBlock: { gap: spacing.lg },
-  sortRow: { gap: spacing.xs },
-  list: { gap: spacing.sm },
-  skeletonCard: { gap: spacing.sm },
-  errorCard: { gap: spacing.sm },
-  retry: { alignSelf: "center" },
-  separator: { height: spacing.sm },
-  footer: { paddingVertical: spacing.md, alignItems: "center" },
-  footerText: { paddingVertical: spacing.md },
-});

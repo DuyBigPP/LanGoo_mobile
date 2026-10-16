@@ -1,9 +1,9 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { AppText } from "@/components/ui";
 import { useT } from "@/i18n";
 import type { KanjiCandidate } from "@/lib/kanji-ink";
-import { radius, spacing, useTheme } from "@/theme";
 
 /** Cạnh một ô gợi ý (nhỏ gọn như bản web). */
 export const CANDIDATE_SIZE = 40;
@@ -19,10 +19,9 @@ export interface CandidateStripProps {
  */
 export function CandidateStrip({ candidates, onPick }: CandidateStripProps) {
   const t = useT();
-  const theme = useTheme();
 
   return (
-    <View style={styles.strip} testID="handwriting-candidates">
+    <View className="h-10 justify-center" testID="handwriting-candidates">
       {candidates.length === 0 ? (
         <AppText variant="caption" center>
           {t("dict.inkHint")}
@@ -31,7 +30,7 @@ export function CandidateStrip({ candidates, onPick }: CandidateStripProps) {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
+          contentContainerClassName="items-center gap-2"
           keyboardShouldPersistTaps="handled"
         >
           {candidates.map((candidate, index) => (
@@ -42,14 +41,10 @@ export function CandidateStrip({ candidates, onPick }: CandidateStripProps) {
               accessibilityRole="button"
               accessibilityLabel={candidate.char}
               accessibilityHint={t("dict.confidence", { percent: (candidate.score * 100).toFixed(1) })}
-              className="active:opacity-85"
-              style={[
-                styles.candidate,
-                {
-                  backgroundColor: theme.colors.card,
-                  borderColor: index === 0 ? theme.colors.primary : theme.colors.border,
-                },
-              ]}
+              className={cn(
+                "h-10 w-10 items-center justify-center rounded-md border bg-card active:opacity-85",
+                index === 0 ? "border-primary" : "border-border",
+              )}
             >
               <AppText size="lg" weight="semibold">
                 {candidate.char}
@@ -61,16 +56,3 @@ export function CandidateStrip({ candidates, onPick }: CandidateStripProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  strip: { height: CANDIDATE_SIZE, justifyContent: "center" },
-  row: { gap: spacing.sm, alignItems: "center" },
-  candidate: {
-    width: CANDIDATE_SIZE,
-    height: CANDIDATE_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-});

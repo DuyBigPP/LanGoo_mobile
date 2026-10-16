@@ -1,5 +1,5 @@
 import * as React from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ApiError } from "@/api/client";
 import {
@@ -25,7 +25,6 @@ import {
 import { useSenseDetail } from "@/hooks/use-dictionary";
 import { useT } from "@/i18n";
 import type { RootStackParamList } from "@/navigation/types";
-import { spacing } from "@/theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EditItem">;
 
@@ -122,12 +121,12 @@ export function EditItemScreen({ navigation, route }: Props) {
   if (itemsQuery.isPending || (!item && itemsQuery.hasNextPage)) {
     return (
       <Screen title={t("study.editItem")} onBack={() => navigation.goBack()} testID="edit-item">
-        <View style={styles.loading}>
-          <Card style={styles.skeletonCard}>
+        <View className="gap-3">
+          <Card className="gap-2">
             <Skeleton height={22} width="45%" />
             <Skeleton height={14} width="65%" />
           </Card>
-          <Card style={styles.skeletonCard}>
+          <Card className="gap-2">
             <Skeleton height={44} width="100%" />
             <Skeleton height={44} width="100%" />
           </Card>
@@ -139,7 +138,7 @@ export function EditItemScreen({ navigation, route }: Props) {
   if (itemsQuery.isError) {
     return (
       <Screen title={t("study.editItem")} onBack={() => navigation.goBack()} testID="edit-item">
-        <Card style={styles.errorCard}>
+        <Card className="gap-2">
           <AppText variant="caption" center>
             {t("study.loadError")}
           </AppText>
@@ -148,7 +147,7 @@ export function EditItemScreen({ navigation, route }: Props) {
             variant="outline"
             size="sm"
             onPress={() => void itemsQuery.refetch()}
-            style={styles.retry}
+            className="self-center"
             testID="edit-item-retry"
           />
         </Card>
@@ -175,14 +174,14 @@ export function EditItemScreen({ navigation, route }: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      className="flex-1"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Screen
         title={t("study.editItem")}
         onBack={() => navigation.goBack()}
         scroll
-        contentStyle={styles.content}
+        contentClassName="gap-4"
         testID="edit-item"
       >
         {/* Mặt từ (đọc từ cache sense) */}
@@ -197,13 +196,13 @@ export function EditItemScreen({ navigation, route }: Props) {
               ) : undefined
             }
           />
-          <AppText variant="caption" style={styles.hint}>
+          <AppText variant="caption" className="mt-2">
             {t("study.editItemDesc")}
           </AppText>
         </Card>
 
         {/* Nghĩa VI + ghi chú */}
-        <Card style={styles.formCard}>
+        <Card className="gap-3">
           <Input
             label={t("dict.meaningVi")}
             value={meaning}
@@ -226,7 +225,7 @@ export function EditItemScreen({ navigation, route }: Props) {
         </Card>
 
         {/* Trạng thái học */}
-        <View style={styles.statusField}>
+        <View className="gap-1">
           <AppText variant="label">{t("study.statusLabel")}</AppText>
           <SegmentedControl
             options={statusOptions}
@@ -237,12 +236,12 @@ export function EditItemScreen({ navigation, route }: Props) {
         </View>
 
         {/* Tag của từ (mirror web EditItemDialog: chọn/bỏ tag) */}
-        <View style={styles.tagField} testID="edit-item-tags">
+        <View className="gap-1" testID="edit-item-tags">
           <AppText variant="label">Tag</AppText>
           <TagPicker selectedIds={tagIds} onChange={setTagIds} />
         </View>
 
-        <View style={styles.actions}>
+        <View className="gap-2">
           <Button
             label={t("common.saveChanges")}
             onPress={() => void handleSave()}
@@ -278,17 +277,3 @@ export function EditItemScreen({ navigation, route }: Props) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { gap: spacing.lg },
-  loading: { gap: spacing.md },
-  skeletonCard: { gap: spacing.sm },
-  errorCard: { gap: spacing.sm },
-  retry: { alignSelf: "center" },
-  hint: { marginTop: spacing.sm },
-  formCard: { gap: spacing.md },
-  statusField: { gap: spacing.xs },
-  tagField: { gap: spacing.xs },
-  actions: { gap: spacing.sm },
-});

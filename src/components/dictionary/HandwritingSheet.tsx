@@ -7,7 +7,7 @@
  */
 
 import * as React from "react";
-import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Delete, Eraser, Search, Undo2 } from "lucide-react-native";
 import { AppText, BottomSheet, Button, IconButton } from "@/components/ui";
@@ -18,7 +18,7 @@ import {
   type InkStroke,
   type KanjiCandidate,
 } from "@/lib/kanji-ink";
-import { radius, spacing, useTheme } from "@/theme";
+import { spacing, useTheme } from "@/theme";
 import { CANDIDATE_SIZE, CandidateStrip } from "./handwriting/CandidateStrip";
 import { InkCanvas } from "./handwriting/InkCanvas";
 
@@ -185,7 +185,7 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
       maxHeightRatio={SHEET_MAX_RATIO}
       testID="handwriting-sheet"
     >
-      <View style={styles.body}>
+      <View className="shrink gap-3">
         <CandidateStrip candidates={status === "idle" ? candidates : []} onPick={handlePick} />
 
         <InkCanvas
@@ -199,17 +199,14 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
 
         {composed.length > 0 ? (
           <View
-            style={styles.composedRow}
+            className="flex-row items-center gap-2"
             accessibilityLabel={t("dict.inkComposed")}
             testID="handwriting-composed"
           >
             {composed.map((char, index) => (
               <View
                 key={`${char}-${index}`}
-                style={[
-                  styles.composedChar,
-                  { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
-                ]}
+                className="h-9 w-9 items-center justify-center rounded-md border border-border bg-card"
               >
                 <AppText size="lg" weight="semibold">
                   {char}
@@ -227,7 +224,7 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
         ) : null}
 
         {/* Một hàng như web: Xoá tất cả · Hoàn tác · số nét · Nhận dạng/Tra cứu */}
-        <View style={styles.actions}>
+        <View className="flex-row items-center gap-2">
           <IconButton
             icon={<Eraser size={18} color={theme.colors.text} />}
             onPress={handleClear}
@@ -244,7 +241,7 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
             disabled={strokeCount === 0}
             testID="handwriting-undo"
           />
-          <View style={styles.statusCell} testID="handwriting-status">
+          <View className="flex-1 items-center" testID="handwriting-status">
             {status === "recognizing" ? (
               <ActivityIndicator size="small" color={theme.colors.primary} />
             ) : (
@@ -264,8 +261,8 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
         </View>
 
         {status === "error" ? (
-          <View style={styles.errorRow}>
-            <AppText variant="caption" color="danger" style={styles.errorText}>
+          <View className="flex-row items-center gap-2">
+            <AppText variant="caption" color="danger" className="flex-1">
               {errorMessage}
             </AppText>
             <Button
@@ -281,20 +278,3 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  body: { gap: spacing.md, flexShrink: 1 },
-  actions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  statusCell: { flex: 1, alignItems: "center" },
-  errorRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  errorText: { flex: 1 },
-  composedRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  composedChar: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-});

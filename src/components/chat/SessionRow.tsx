@@ -1,10 +1,11 @@
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { MoreHorizontal } from "lucide-react-native";
 import { AppText, Chip, IconButton } from "@/components/ui";
 import { useT } from "@/i18n";
 import { formatRelativeTime } from "@/lib/format";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 import type { ChatSessionDto } from "@/types/api";
 import { chatScenarioLabel, sessionTitle } from "./chat-helpers";
 
@@ -29,16 +30,18 @@ export function SessionRow({ session, active, onSelect, onManage }: SessionRowPr
       accessibilityRole="button"
       accessibilityLabel={sessionTitle(session.title, t("chat.untitled"))}
       testID="chat-session-item"
-      className="active:bg-primary-soft"
-      style={[styles.row, active ? { backgroundColor: theme.colors.primarySoft } : null]}
+      className={cn(
+        "min-h-[56px] flex-row items-center gap-2 rounded-md p-2 active:bg-primary-soft",
+        active && "bg-primary-soft",
+      )}
     >
-      <View style={styles.info}>
-        <View style={styles.titleRow}>
+      <View className="flex-1 gap-0.5">
+        <View className="flex-row items-center gap-2">
           <AppText
             variant="body"
             weight={active ? "semibold" : "medium"}
             numberOfLines={1}
-            style={styles.title}
+            className="shrink"
           >
             {sessionTitle(session.title, t("chat.untitled"))}
           </AppText>
@@ -53,25 +56,9 @@ export function SessionRow({ session, active, onSelect, onManage }: SessionRowPr
         onPress={onManage}
         accessibilityLabel={t("chat.sessionOptions")}
         size="sm"
-        style={styles.optionsButton}
+        className="self-center"
         testID="chat-session-options"
       />
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    minHeight: 56,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  info: { flex: 1, gap: 2 },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  title: { flexShrink: 1 },
-  optionsButton: { alignSelf: "center" },
-});

@@ -1,9 +1,8 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { AppText, Button } from "@/components/ui";
 import type { ChatPendingTurn } from "@/hooks/use-chat";
 import { useT } from "@/i18n";
-import { spacing } from "@/theme";
 import { ChatBubble } from "./ChatBubble";
 
 export interface PendingTurnProps {
@@ -20,7 +19,7 @@ export function PendingTurn({ turn, onRetry, onDismiss }: PendingTurnProps) {
   const stamp = new Date().toISOString();
 
   return (
-    <View style={styles.wrap}>
+    <View className="gap-3">
       <ChatBubble role="user" content={turn.content} createdAt={stamp} images={turn.images} />
       <ChatBubble
         role="assistant"
@@ -30,7 +29,7 @@ export function PendingTurn({ turn, onRetry, onDismiss }: PendingTurnProps) {
         streaming={streaming}
       />
       {!streaming ? (
-        <View style={styles.actions}>
+        <View className="flex-row flex-wrap items-center gap-2 pl-1">
           <AppText variant="caption" color={turn.status === "error" ? "danger" : "muted"}>
             {turn.status === "error" ? turn.error || t("chat.turnError") : t("chat.stopped")}
           </AppText>
@@ -53,14 +52,3 @@ export function PendingTurn({ turn, onRetry, onDismiss }: PendingTurnProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { gap: spacing.md },
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    paddingLeft: spacing.xs,
-  },
-});

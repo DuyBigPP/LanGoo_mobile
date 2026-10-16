@@ -7,6 +7,8 @@
  * - radius:  khớp web (--radius 12px): sm=8 md=10 lg=12 xl=16 2xl=16(mặc định) pill=rounded-full
  * - chữ:     thang mặc định Tailwind (xs=12 sm=14 base=16 lg=18 xl=20 2xl=24) + text-hero=40
  */
+const { hairlineWidth } = require("nativewind/theme");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./index.js", "./src/**/*.{js,jsx,ts,tsx}"],
@@ -37,8 +39,10 @@ module.exports = {
         "text-faint": "rgb(var(--text-faint) / <alpha-value>)",
         "card-elevated": "rgb(var(--card-elevated) / <alpha-value>)",
         "primary-soft": "rgb(var(--primary-soft) / <alpha-value>)",
+        "danger-soft": "rgb(var(--danger-soft) / <alpha-value>)",
       },
       borderRadius: { sm: "8px", md: "10px", lg: "12px", xl: "16px" },
+      borderWidth: { hairline: hairlineWidth() },
       fontSize: { hero: ["40px", "48px"] },
       fontFamily: { sans: ["Be Vietnam Pro"] },
     },

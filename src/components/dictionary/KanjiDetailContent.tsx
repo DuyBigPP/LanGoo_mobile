@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Copy, Search } from "lucide-react-native";
@@ -12,7 +12,7 @@ import { useT } from "@/i18n";
 import { copyText } from "@/lib/clipboard";
 import { kanjiMeaningsEn, kanjiReadings } from "@/lib/kanji";
 import type { RootStackParamList } from "@/navigation/types";
-import { radius, spacing, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 export interface KanjiDetailContentProps {
   /** Chữ Hán cần hiện chi tiết */
@@ -42,8 +42,8 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
 
   if (kanji.isPending) {
     return (
-      <View style={styles.skeletonWrap}>
-        <Skeleton height={88} width={88} radius={radius.lg} />
+      <View className="gap-3">
+        <Skeleton height={88} width={88} className="rounded-lg" />
         <Skeleton height={20} width="40%" />
         <Skeleton height={60} width="100%" />
       </View>
@@ -52,7 +52,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
 
   if (kanji.isError || !data) {
     return (
-      <Card style={styles.section}>
+      <Card className="gap-2">
         <AppText variant="caption" center>
           {t("dict.kanjiLoadError")}
         </AppText>
@@ -61,31 +61,28 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
           variant="outline"
           size="sm"
           onPress={() => void kanji.refetch()}
-          style={styles.center}
+          className="self-center"
         />
       </Card>
     );
   }
 
   return (
-    <View style={styles.content}>
+    <View className="gap-4">
       {/* Chữ lớn + Hán–Việt */}
-      <View style={styles.heroRow}>
+      <View className="flex-row items-center gap-4">
         <View
-          style={[
-            styles.heroBox,
-            { borderColor: theme.colors.border, backgroundColor: theme.colors.background },
-          ]}
+          className="h-[88px] w-[88px] items-center justify-center rounded-lg border border-border bg-background"
         >
           <AppText size="hero" weight="semibold">
             {data.literal}
           </AppText>
         </View>
-        <View style={styles.heroInfo}>
+        <View className="flex-1 items-start gap-2">
           {readings.vietnam.length > 0 ? (
             <AppText variant="subtitle">{`「${readings.vietnam.join(", ")}」`}</AppText>
           ) : null}
-          <View style={styles.heroActions}>
+          <View className="flex-row items-center gap-2">
             <SpeakButton text={data.literal} lang="ja" />
             <IconButton
               icon={<Copy size={16} color={theme.colors.textMuted} />}
@@ -103,7 +100,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
       </View>
 
       {/* Chips thông tin */}
-      <View style={styles.chipRow}>
+      <View className="flex-row flex-wrap items-center gap-2">
         {data.stroke_count != null ? (
           <Chip>{t("dict.strokes", { count: data.stroke_count })}</Chip>
         ) : null}
@@ -118,10 +115,10 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
       <KanjiStrokePlayer literal={data.literal} />
 
       {/* Âm đọc */}
-      <View style={styles.section}>
+      <View className="gap-2">
         <SectionHeader title={t("dict.sectionPronunciation")} />
         {readings.kun.length > 0 || readings.on.length > 0 || nanori.length > 0 ? (
-          <View style={styles.readingList}>
+          <View className="gap-2">
             <ReadingLine label={t("common.readingKun")} values={readings.kun} testID="kun" />
             <ReadingLine label={t("common.readingOn")} values={readings.on} testID="on" />
             <ReadingLine label={t("common.readingNanori")} values={nanori} testID="nanori" />
@@ -133,7 +130,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
 
       {/* Nghĩa (dữ liệu KanjiDict trả tiếng Anh) */}
       {meanings.length > 0 ? (
-        <View style={styles.section}>
+        <View className="gap-2">
           <SectionHeader title={t("dict.sectionMeaning")} />
           {meanings.map(meaning => (
             <AppText key={meaning} variant="body" selectable>{`• ${meaning}`}</AppText>
@@ -143,20 +140,17 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
 
       {/* Bộ thủ */}
       {data.radical?.char ? (
-        <View style={styles.section}>
+        <View className="gap-2">
           <SectionHeader title={t("dict.radical")} />
-          <Card style={styles.radicalCard}>
+          <Card className="flex-row items-center gap-3">
             <View
-              style={[
-                styles.radicalBox,
-                { borderColor: theme.colors.border, backgroundColor: theme.colors.background },
-              ]}
+              className="h-[48px] w-[48px] items-center justify-center rounded-md border border-border bg-background"
             >
               <AppText size="xl" weight="semibold">
                 {data.radical.char}
               </AppText>
             </View>
-            <View style={styles.flex}>
+            <View className="flex-1">
               <AppText variant="body" weight="medium">
                 {data.radical.name_vi ?? `${t("dict.radical")} ${data.radical.char}`}
               </AppText>
@@ -180,7 +174,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
       />
 
       {/* Số từ đang dùng chữ này (mirror web "kanjiUsedIn") */}
-      <View style={styles.section}>
+      <View className="gap-2">
         <SectionHeader title={t("dict.kanjiUsedIn")} />
         <AppText variant={data.used_in_forms > 0 ? "body" : "caption"} testID="kanji-used-in-forms">
           {data.used_in_forms > 0
@@ -206,45 +200,13 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
 function ReadingLine({ label, values, testID }: { label: string; values: string[]; testID: string }) {
   if (values.length === 0) return null;
   return (
-    <View style={styles.readingLine} testID={`kanji-reading-${testID}`}>
-      <AppText variant="label" color="muted" style={styles.readingLabel}>
+    <View className="flex-row items-start gap-3" testID={`kanji-reading-${testID}`}>
+      <AppText variant="label" color="muted" className="w-[76px]">
         {label}
       </AppText>
-      <AppText variant="body" style={styles.flex} selectable>
+      <AppText variant="body" className="flex-1" selectable>
         {values.join(" ; ")}
       </AppText>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { gap: spacing.lg },
-  center: { alignSelf: "center" },
-  section: { gap: spacing.sm },
-  skeletonWrap: { gap: spacing.md },
-  heroRow: { flexDirection: "row", alignItems: "center", gap: spacing.lg },
-  heroBox: {
-    width: 88,
-    height: 88,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.lg,
-  },
-  heroActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  heroInfo: { flex: 1, alignItems: "flex-start", gap: spacing.sm },
-  chipRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  readingList: { gap: spacing.sm },
-  readingLine: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
-  readingLabel: { width: 76 },
-  radicalCard: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  radicalBox: {
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-});
