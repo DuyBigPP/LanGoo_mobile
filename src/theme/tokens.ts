@@ -9,21 +9,23 @@ export const spacing = {
   xxl: 28,
 } as const;
 
+/** Khớp web: --radius 12px; sm 8, md 10, lg 12, xl 16 (tailwind.config.js borderRadius). */
 export const radius = {
   sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
+  md: 10,
+  lg: 12,
+  xl: 16,
   pill: 999,
 } as const;
 
+/** Thang chữ mặc định Tailwind (xs 12 … 2xl 24) + hero 40 riêng của app. */
 export const fontSize = {
-  xs: 11,
-  sm: 13,
-  md: 15,
-  lg: 17,
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 18,
   xl: 20,
-  xxl: 28,
+  xxl: 24,
   hero: 40,
 } as const;
 

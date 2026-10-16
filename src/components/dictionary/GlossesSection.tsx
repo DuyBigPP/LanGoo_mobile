@@ -44,7 +44,7 @@ export function GlossesSection({ glosses, onReport }: GlossesSectionProps) {
                 {gloss.rank}
               </AppText>
               <View style={styles.body}>
-                <AppText variant="body" weight="medium">
+                <AppText variant="body" weight="medium" selectable>
                   {gloss.text}
                 </AppText>
                 <View style={styles.badgeRow}>
@@ -55,7 +55,11 @@ export function GlossesSection({ glosses, onReport }: GlossesSectionProps) {
                     </AppText>
                   ) : null}
                 </View>
-                {gloss.detail ? <AppText variant="caption">{gloss.detail}</AppText> : null}
+                {gloss.detail ? (
+                  <AppText variant="caption" selectable>
+                    {gloss.detail}
+                  </AppText>
+                ) : null}
               </View>
               {/* Loa đọc từng gloss theo ngôn ngữ của gloss (như bản web) */}
               {speakLang ? <SpeakButton text={gloss.text} lang={speakLang} size="sm" /> : null}

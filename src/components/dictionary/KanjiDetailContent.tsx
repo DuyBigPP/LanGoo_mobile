@@ -1,41 +1,18 @@
 import * as React from "react";
 import { StyleSheet, View } from "react-native";
-import { Search } from "lucide-react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Copy, Search } from "lucide-react-native";
 import { KanjiStrokePlayer } from "@/components/dictionary/KanjiStrokePlayer";
+import { KanjiBreakdown } from "@/components/dictionary/kanji/KanjiBreakdown";
 import { SpeakButton } from "@/components/domain/SpeakButton";
-import { AppText, Button, Card, Chip, SectionHeader, Skeleton } from "@/components/ui";
+import { AppText, Button, Card, Chip, IconButton, SectionHeader, Skeleton, useToast } from "@/components/ui";
 import { useKanji } from "@/hooks/use-dictionary";
-import { translate, useT } from "@/i18n";
+import { useT } from "@/i18n";
+import { copyText } from "@/lib/clipboard";
 import { kanjiMeaningsEn, kanjiReadings } from "@/lib/kanji";
+import type { RootStackParamList } from "@/navigation/types";
 import { radius, spacing, useTheme } from "@/theme";
-import type { KanjiComponentDto, KanjiPartDto } from "@/types/dictionary";
-
-/** Nhãn âm đọc — dùng khoá i18n common.reading* */
-const READING_LABEL_KEYS = {
-  kun: "common.readingKun",
-  on: "common.readingOn",
-  nanori: "common.readingNanori",
-};
-/** Thiếu khoá i18n cho lỗi tải chữ Hán — dùng tạm tiếng Việt (đã ghi trong báo cáo). */
-const KANJI_LOAD_ERROR = "Không tải được dữ liệu chữ Hán.";
-
-/** Vị trí thành phần trong chữ — khớp mã backend với khoá dict.pos*. */
-const POSITION_KEYS: Record<string, string> = {
-  top: "dict.posTop",
-  bottom: "dict.posBottom",
-  left: "dict.posLeft",
-  right: "dict.posRight",
-  inside: "dict.posInside",
-  outside: "dict.posOutside",
-  center: "dict.posCenter",
-  kamae: "dict.posEnclose",
-};
-
-function positionLabel(position: string | null): string | null {
-  if (!position) return null;
-  const key = POSITION_KEYS[position];
-  return key ? translate(key) : position;
-}
 
 export interface KanjiDetailContentProps {
   /** Chữ Hán cần hiện chi tiết */
@@ -46,13 +23,15 @@ export interface KanjiDetailContentProps {
 
 /**
  * Nội dung chi tiết một chữ Hán: chữ lớn + Hán–Việt, chips thông tin, thứ tự nét,
- * âm đọc Kun/On/Nanori, nghĩa, bộ thủ và cây thành phần.
+ * âm đọc Kun/On/Nanori, nghĩa, bộ thủ và phân tích thành phần (đồ thị + cây).
  * Dùng chung cho màn chi tiết chữ Hán và tab "Hán tự" trong chi tiết nghĩa
  * (không kèm khung Screen/ScrollView để nhúng được vào màn khác).
  */
 export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailContentProps) {
   const t = useT();
   const theme = useTheme();
+  const { show } = useToast();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const kanji = useKanji(literal);
   const data = kanji.data;
 
@@ -60,9 +39,6 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
   const nanori = data?.nanori ?? [];
   const meanings = kanjiMeaningsEn(data);
   const jlpt = data?.jlpt_new ?? data?.jlpt_old ?? null;
-  const tree = data?.components ?? null;
-  const parts = data?.parts ?? [];
-  const hasTree = Boolean(tree && tree.children.length > 0);
 
   if (kanji.isPending) {
     return (
@@ -78,7 +54,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
     return (
       <Card style={styles.section}>
         <AppText variant="caption" center>
-          {KANJI_LOAD_ERROR}
+          {t("dict.kanjiLoadError")}
         </AppText>
         <Button
           label={t("common.retry")}
@@ -109,7 +85,20 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
           {readings.vietnam.length > 0 ? (
             <AppText variant="subtitle">{`「${readings.vietnam.join(", ")}」`}</AppText>
           ) : null}
-          <SpeakButton text={data.literal} lang="ja" />
+          <View style={styles.heroActions}>
+            <SpeakButton text={data.literal} lang="ja" />
+            <IconButton
+              icon={<Copy size={16} color={theme.colors.textMuted} />}
+              accessibilityLabel={t("dict.copyKanji")}
+              onPress={() => {
+                copyText(data.literal);
+                show(t("dict.lookupCopied"), { type: "success" });
+              }}
+              size="sm"
+              variant="outline"
+              testID="kanji-copy"
+            />
+          </View>
         </View>
       </View>
 
@@ -125,8 +114,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
         ) : null}
       </View>
 
-      {/* Thứ tự nét — đặt ngay sau chữ lớn/chips (như bản web để cạnh chữ) và
-          tiếp nối chip số nét phía trên; component tự ẩn nếu không có dữ liệu */}
+      {/* Thứ tự nét — component tự ẩn nếu không có dữ liệu */}
       <KanjiStrokePlayer literal={data.literal} />
 
       {/* Âm đọc */}
@@ -134,15 +122,9 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
         <SectionHeader title={t("dict.sectionPronunciation")} />
         {readings.kun.length > 0 || readings.on.length > 0 || nanori.length > 0 ? (
           <View style={styles.readingList}>
-            {readings.kun.length > 0 ? (
-              <ReadingLine label={t(READING_LABEL_KEYS.kun)} values={readings.kun} testID="kun" />
-            ) : null}
-            {readings.on.length > 0 ? (
-              <ReadingLine label={t(READING_LABEL_KEYS.on)} values={readings.on} testID="on" />
-            ) : null}
-            {nanori.length > 0 ? (
-              <ReadingLine label={t(READING_LABEL_KEYS.nanori)} values={nanori} testID="nanori" />
-            ) : null}
+            <ReadingLine label={t("common.readingKun")} values={readings.kun} testID="kun" />
+            <ReadingLine label={t("common.readingOn")} values={readings.on} testID="on" />
+            <ReadingLine label={t("common.readingNanori")} values={nanori} testID="nanori" />
           </View>
         ) : (
           <AppText variant="caption">{t("dict.readingsEmpty")}</AppText>
@@ -154,7 +136,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
         <View style={styles.section}>
           <SectionHeader title={t("dict.sectionMeaning")} />
           {meanings.map(meaning => (
-            <AppText key={meaning} variant="body">{`• ${meaning}`}</AppText>
+            <AppText key={meaning} variant="body" selectable>{`• ${meaning}`}</AppText>
           ))}
         </View>
       ) : null}
@@ -167,10 +149,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
             <View
               style={[
                 styles.radicalBox,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.background,
-                },
+                { borderColor: theme.colors.border, backgroundColor: theme.colors.background },
               ]}
             >
               <AppText size="xl" weight="semibold">
@@ -179,7 +158,7 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
             </View>
             <View style={styles.flex}>
               <AppText variant="body" weight="medium">
-                {data.radical.name_vi ?? `Bộ ${data.radical.char}`}
+                {data.radical.name_vi ?? `${t("dict.radical")} ${data.radical.char}`}
               </AppText>
               {data.radical.meaning_vi ? (
                 <AppText variant="caption">
@@ -191,27 +170,23 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
         </View>
       ) : null}
 
-      {/* Kanji breakdown: cây thành phần KanjiVG, fallback KRADFILE (parts) */}
+      {/* Phân tích: đồ thị thành phần + cây KanjiVG (fallback KRADFILE) — chạm node mở chữ đó */}
+      <KanjiBreakdown
+        literal={data.literal}
+        tree={data.components ?? null}
+        parts={data.parts ?? []}
+        radical={data.radical?.char ?? null}
+        onOpenKanji={char => navigation.push("KanjiDetail", { literal: char })}
+      />
+
+      {/* Số từ đang dùng chữ này (mirror web "kanjiUsedIn") */}
       <View style={styles.section}>
-        <SectionHeader title={t("dict.breakdownTitle")} />
-        {hasTree && tree ? (
-          <View style={styles.breakdownList} testID="kanji-breakdown">
-            {tree.children.map((component, index) => (
-              <BreakdownNode
-                key={`${component.char}-${component.position ?? index}`}
-                component={component}
-              />
-            ))}
-          </View>
-        ) : parts.length > 0 ? (
-          <View style={styles.breakdownList} testID="kanji-breakdown">
-            {parts.map((part, index) => (
-              <PartNode key={`${part.char}-${index}`} part={part} />
-            ))}
-          </View>
-        ) : (
-          <AppText variant="caption">{t("dict.breakdownEmpty")}</AppText>
-        )}
+        <SectionHeader title={t("dict.kanjiUsedIn")} />
+        <AppText variant={data.used_in_forms > 0 ? "body" : "caption"} testID="kanji-used-in-forms">
+          {data.used_in_forms > 0
+            ? t("dict.usedInForms", { count: data.used_in_forms })
+            : t("dict.noForms")}
+        </AppText>
       </View>
 
       {onSearchWords ? (
@@ -227,107 +202,17 @@ export function KanjiDetailContent({ literal, onSearchWords }: KanjiDetailConten
   );
 }
 
-/** Một dòng âm đọc (Kun/On/Nanori). */
-function ReadingLine({
-  label,
-  values,
-  testID,
-}: {
-  label: string;
-  values: string[];
-  testID: string;
-}) {
+/** Một dòng âm đọc (Kun/On/Nanori); không có giá trị thì không hiện. */
+function ReadingLine({ label, values, testID }: { label: string; values: string[]; testID: string }) {
+  if (values.length === 0) return null;
   return (
     <View style={styles.readingLine} testID={`kanji-reading-${testID}`}>
       <AppText variant="label" color="muted" style={styles.readingLabel}>
         {label}
       </AppText>
-      <AppText variant="body" style={styles.flex}>
+      <AppText variant="body" style={styles.flex} selectable>
         {values.join(" ; ")}
       </AppText>
-    </View>
-  );
-}
-
-/** Một node trong cây thành phần chữ Hán (đệ quy theo `children`). */
-function BreakdownNode({ component }: { component: KanjiComponentDto }) {
-  const t = useT();
-  const theme = useTheme();
-  const details = [
-    positionLabel(component.position),
-    component.original ? t("dict.breakdownOriginal", { char: component.original }) : null,
-    component.stroke_count > 0 ? t("dict.strokes", { count: component.stroke_count }) : null,
-  ].filter((value): value is string => Boolean(value));
-
-  return (
-    <View testID={`kanji-component-${component.char}`} style={styles.nodeWrap}>
-      <View style={styles.nodeRow}>
-        <View
-          style={[
-            styles.nodeChar,
-            { borderColor: theme.colors.border, backgroundColor: theme.colors.background },
-          ]}
-        >
-          <AppText size="lg" weight="semibold">
-            {component.char}
-          </AppText>
-        </View>
-        <View style={styles.flex}>
-          {component.name_vi || component.meaning_vi ? (
-            <AppText variant="body" weight="medium" numberOfLines={1}>
-              {component.name_vi ?? component.meaning_vi}
-              {component.name_vi && component.meaning_vi ? ` · ${component.meaning_vi}` : ""}
-            </AppText>
-          ) : null}
-          {details.length > 0 ? (
-            <AppText variant="caption" numberOfLines={1}>
-              {details.join(" · ")}
-            </AppText>
-          ) : null}
-        </View>
-        {component.is_radical ? <Chip>{t("dict.compRadical")}</Chip> : null}
-        {component.is_phonetic ? <Chip>{t("dict.compPhonetic")}</Chip> : null}
-      </View>
-      {component.children.length > 0 ? (
-        <View style={[styles.children, { borderLeftColor: theme.colors.border }]}>
-          {component.children.map((child, index) => (
-            <BreakdownNode key={`${child.char}-${child.position ?? index}`} component={child} />
-          ))}
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-/** Node fallback từ `parts` (KRADFILE) khi chưa có cây thành phần. */
-function PartNode({ part }: { part: KanjiPartDto }) {
-  const t = useT();
-  const theme = useTheme();
-
-  return (
-    <View style={styles.nodeRow} testID={`kanji-part-${part.char}`}>
-      <View
-        style={[
-          styles.nodeChar,
-          { borderColor: theme.colors.border, backgroundColor: theme.colors.background },
-        ]}
-      >
-        <AppText size="lg" weight="semibold">
-          {part.char}
-        </AppText>
-      </View>
-      <View style={styles.flex}>
-        {part.name_vi || part.meaning_vi ? (
-          <AppText variant="body" weight="medium" numberOfLines={1}>
-            {part.name_vi ?? part.meaning_vi}
-            {part.name_vi && part.meaning_vi ? ` · ${part.meaning_vi}` : ""}
-          </AppText>
-        ) : null}
-        {part.radical_number != null ? (
-          <AppText variant="caption">{`#${part.radical_number}`}</AppText>
-        ) : null}
-      </View>
-      {part.is_radical ? <Chip>{t("dict.compRadical")}</Chip> : null}
     </View>
   );
 }
@@ -347,6 +232,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.lg,
   },
+  heroActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   heroInfo: { flex: 1, alignItems: "flex-start", gap: spacing.sm },
   chipRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
   readingList: { gap: spacing.sm },
@@ -360,22 +246,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderRadius: radius.md,
-  },
-  breakdownList: { gap: spacing.md },
-  nodeWrap: { gap: spacing.sm },
-  nodeRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
-  nodeChar: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.sm,
-  },
-  children: {
-    marginLeft: spacing.lg,
-    paddingLeft: spacing.md,
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    gap: spacing.sm,
   },
 });

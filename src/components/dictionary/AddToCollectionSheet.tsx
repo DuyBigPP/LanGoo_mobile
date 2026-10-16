@@ -81,7 +81,7 @@ export function AddToCollectionSheet({
       });
       setCollectionId(created.id);
       setNewName("");
-      show(t("study.created"), { type: "success" });
+      show(t("study.createdNamed", { name }), { type: "success" });
     } catch (error) {
       show(ApiError.from(error).message, { type: "error" });
     }
@@ -103,7 +103,7 @@ export function AddToCollectionSheet({
           const name =
             items.find(collection => collection.id === collectionId)?.name ??
             t("dict.defaultCollection");
-          show(t("dict.addedTo", { surface, name }), { type: "success" });
+          show(t("dict.addedToNamed", { word: surface, name }), { type: "success" });
           onClose();
         },
         onError: error => {
@@ -160,10 +160,7 @@ export function AddToCollectionSheet({
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
                       testID={`add-collection-${collection.id}`}
-                      style={({ pressed }) => [
-                        styles.collectionRow,
-                        pressed ? styles.rowPressed : null,
-                      ]}
+                      className="active:opacity-85" style={styles.collectionRow}
                     >
                       <View style={styles.flex}>
                         <AppText

@@ -42,11 +42,13 @@ const VARIANT_MAP: Record<ButtonVariant, ReusablesVariant> = {
 /**
  * Cỡ cũ → size của Reusables, kèm class giữ đúng hình học cũ:
  * minHeight 44/48/54 (chuẩn vùng chạm a11y) và padding ngang 12/16/20.
+ * `h-auto` bỏ chiều cao cố định h-9/h-10/h-11 của Reusables: Yoga tính khung cha theo `height`
+ * cố định (không theo minHeight) nên danh sách nút trong Card bị cắt / chữ phía dưới đè lên nút.
  */
 const SIZE_MAP: Record<ButtonSize, { size: ReusablesSize; className: string; text: string }> = {
-  sm: { size: "sm", className: "min-h-[44px] px-3", text: "text-sm" },
-  md: { size: "default", className: "min-h-[48px] px-4", text: "text-base" },
-  lg: { size: "lg", className: "min-h-[54px] px-5", text: "text-lg" },
+  sm: { size: "sm", className: "h-auto min-h-[44px] px-3", text: "text-sm" },
+  md: { size: "default", className: "h-auto min-h-[48px] px-4", text: "text-base" },
+  lg: { size: "lg", className: "h-auto min-h-[54px] px-5", text: "text-lg" },
 };
 
 /** Ghi đè nhỏ để không đổi giao diện cũ: nút outline nền trong suốt. */
@@ -130,7 +132,7 @@ export function Button({
   // `opacity-100` khi khoá để ghi đè `opacity-50` mặc định của Reusables (xem DISABLED_CLASS).
   const buttonClass = cn(
     buttonVariants({ variant: rVariant, size: rSize }),
-    "gap-2 rounded-xl",
+    "gap-2 rounded-lg",
     SIZE_MAP[size].className,
     fullWidth ? "self-stretch" : "self-start",
     blocked ? "opacity-100" : null,

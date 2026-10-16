@@ -8,6 +8,7 @@ import {
   updateProfile,
   updateSettings,
 } from "@/api/profile";
+import { useAuth } from "@/contexts/AuthContext";
 import type { ProfileDto } from "@/types/api";
 
 export const queryKeys = {
@@ -21,19 +22,22 @@ export const queryKeys = {
  * initialData; UI tự đọc sessionCache khi cần hiện tức thì.
  */
 export function useProfilesQuery(enabled = true) {
+  // Endpoint cần đăng nhập — guest không bao giờ gọi
+  const authenticated = useAuth().status === "authenticated";
   return useQuery({
     queryKey: queryKeys.profiles,
     queryFn: fetchProfiles,
-    enabled,
+    enabled: enabled && authenticated,
     staleTime: 30_000,
   });
 }
 
 export function useSettingsQuery(enabled = true) {
+  const authenticated = useAuth().status === "authenticated";
   return useQuery({
     queryKey: queryKeys.settings,
     queryFn: fetchSettings,
-    enabled,
+    enabled: enabled && authenticated,
     staleTime: 60_000,
   });
 }

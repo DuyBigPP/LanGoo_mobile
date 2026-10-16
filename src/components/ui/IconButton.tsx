@@ -60,7 +60,7 @@ export function IconButton({
       className={cn(
         "items-center justify-center self-start active:bg-secondary",
         SIZE_CLASS[size],
-        shape === "circle" ? "rounded-full" : "rounded-xl",
+        shape === "circle" ? "rounded-full" : "rounded-lg",
         variant === "outline" && "border border-border",
         disabled && "opacity-40",
       )}

@@ -70,7 +70,8 @@ export function KanjiCard({ literal, testID = "dict-kanji-card" }: KanjiCardProp
         accessibilityRole="button"
         accessibilityLabel={`${t("dict.kanjiDetailTitle")} ${data.literal}`}
         testID="dict-kanji-button"
-        style={({ pressed }) => [styles.body, pressed ? styles.pressed : null]}
+        className="active:opacity-85"
+        style={styles.body}
       >
         <View
           style={[
@@ -101,7 +102,7 @@ export function KanjiCard({ literal, testID = "dict-kanji-card" }: KanjiCardProp
           <View style={styles.readingList}>
             {readings.vietnam.length > 0 ? (
               <ReadingLine
-                label={t("dict.hanViet")}
+                label={t("dict.hanVietLabel")}
                 values={readings.vietnam}
                 testID="dict-kanji-vietnam"
               />
@@ -148,7 +149,7 @@ function ReadingLine({
 }) {
   return (
     <AppText variant="caption" numberOfLines={2} testID={testID}>
-      {`${label}: `}
+      {`${label}${label.endsWith(":") ? " " : ": "}`}
       <AppText variant="caption" weight="medium">
         {values.join("、")}
       </AppText>

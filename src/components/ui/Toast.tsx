@@ -168,7 +168,7 @@ function ToastView({
           accessibilityLiveRegion="polite"
           accessibilityLabel={toast.message}
           testID="toast"
-          className="w-full max-w-[480px] self-center flex-row items-center gap-2 rounded-xl border border-border bg-card-elevated px-4 py-3 shadow-[0px_4px_12px_rgba(0,0,0,0.18)] elevation-md"
+          className="w-full max-w-[480px] self-center flex-row items-center gap-2 rounded-lg border border-border bg-card-elevated px-4 py-3 shadow-[0px_4px_12px_rgba(0,0,0,0.18)] elevation-md"
         >
           {icon}
           <AppText variant="caption" color="default" numberOfLines={3} className="flex-1">

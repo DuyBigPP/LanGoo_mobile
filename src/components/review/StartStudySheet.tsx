@@ -54,9 +54,6 @@ const GENERATING_STEP_KEYS = [
   "review.generatingStep4",
 ] as const;
 
-/** Câu nhắc cooldown (giống bản web) */
-const cooldownMessage = (seconds: number) => `Vừa tạo quiz xong — đợi ${seconds}s rồi thử lại nhé.`;
-
 /**
  * Bottom sheet bắt đầu phiên học (mirror web StartStudyDialog):
  * - Flashcard: mở màn lật thẻ với hàng đợi /srs/due.
@@ -226,7 +223,7 @@ export function StartStudySheet({ visible, onClose, collection }: StartStudyShee
           (apiError.details as { retry_after_s?: number } | undefined)?.retry_after_s ?? 15,
         );
         setCooldown(seconds);
-        show(cooldownMessage(seconds), { type: "error" });
+        show(t("review.quizCooldown", { seconds }), { type: "error" });
       } else if (apiError.code === "QUIZ_SCOPE_CHANGED") {
         // Hồ sơ/ngôn ngữ đổi giữa lúc AI đang tạo -> phải tạo lại
         show(t("review.quizScopeChanged"), { type: "error" });

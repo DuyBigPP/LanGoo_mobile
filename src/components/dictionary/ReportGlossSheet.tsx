@@ -92,7 +92,7 @@ export function ReportGlossSheet({ visible, gloss, onClose }: ReportGlossSheetPr
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   testID={`report-issue-${option.value}`}
-                  style={({ pressed }) => [styles.issueRow, pressed ? styles.rowPressed : null]}
+                  className="active:opacity-85" style={styles.issueRow}
                 >
                   <AppText
                     variant="body"

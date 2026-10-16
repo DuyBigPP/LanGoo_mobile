@@ -1,27 +1,28 @@
 import * as React from "react";
-import { ActivityIndicator, Clipboard, Pressable, Share, View } from "react-native";
-import {
-  ArrowRightLeft,
-  Check,
-  ChevronDown,
-  Copy,
-  Languages,
-  Share2,
-  X,
-} from "lucide-react-native";
+import { ActivityIndicator, Share, View } from "react-native";
+import { ArrowRightLeft, Copy, Languages, Share2, X } from "lucide-react-native";
 import {
   AppText,
-  BottomSheet,
   Button,
   Card,
   IconButton,
   Input,
-  ListRow,
   Screen,
   useToast,
 } from "@/components/ui";
 import { SpeakButton } from "@/components/domain/SpeakButton";
+import { ContrastPanel } from "@/components/translate/ContrastPanel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/reusables/select";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFuriganaPreference } from "@/hooks/use-furigana";
 import { useT } from "@/i18n";
+import { hasKanji } from "@/lib/furigana";
 import { stopSpeaking } from "@/lib/tts";
 import {
   translateText,
@@ -29,6 +30,7 @@ import {
   type TranslateResult,
   type TranslateSource,
 } from "@/lib/translate";
+import { copyText } from "@/lib/clipboard";
 import { useTheme } from "@/theme";
 
 /** Chờ người dùng ngừng gõ rồi mới dịch (giống web: pages/translate/index.tsx). */
@@ -45,9 +47,6 @@ const SOURCE_LABEL_KEYS: Record<TranslateSource, string> = {
   en: "dict.langEn",
   ja: "dict.langJa",
 };
-
-/** Thiếu khoá i18n cho nút chia sẻ (đã ghi trong báo cáo) — dùng tạm tiếng Việt. */
-const SHARE_LABEL = "Chia sẻ";
 
 /** Nhãn đầy đủ của một ngôn ngữ dịch (namespace translatePage). */
 function langLabel(lang: TranslateLang, t: (key: string) => string): string {
@@ -71,60 +70,43 @@ interface LangPickerProps {
 }
 
 /**
- * Chọn ngôn ngữ gọn kiểu native: nút một dòng hiện giá trị đang chọn, bấm mở bottom sheet.
+ * Chọn ngôn ngữ gọn: nút một dòng hiện giá trị đang chọn, bấm mở danh sách thả (Select của React Native Reusables).
  * Hai SegmentedControl đầy đủ không đủ chỗ trên màn hẹp nên gom về một hàng như bản web.
  */
 function LangPicker({ label, value, options, onSelect, testID }: LangPickerProps) {
-  const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+  const insets = useSafeAreaInsets();
   const current = options.find(option => option.value === value) ?? options[0];
 
   return (
-    <>
-      <Pressable
-        onPress={() => setOpen(true)}
+    <Select
+      value={{ value: current.value, label: current.label }}
+      onValueChange={option => {
+        if (option) onSelect(option.value);
+      }}
+    >
+      <SelectTrigger
         testID={testID}
-        accessibilityRole="button"
         accessibilityLabel={`${label}: ${current.label}`}
-        className="min-h-[48px] flex-1 flex-row items-center justify-between gap-1 rounded-xl border border-border bg-card px-3 py-1.5 active:bg-secondary"
+        className="h-auto min-h-[48px] flex-1 gap-1 rounded-lg bg-card px-3 py-1.5"
       >
         <View className="shrink">
           <AppText size="xs" color="muted">
             {label}
           </AppText>
-          <AppText size="sm" weight="semibold" numberOfLines={1}>
-            {current.label}
-          </AppText>
+          <SelectValue placeholder={current.label} className="font-semibold" numberOfLines={1} />
         </View>
-        <ChevronDown size={16} color={theme.colors.textMuted} />
-      </Pressable>
-
-      <BottomSheet
-        visible={open}
-        onClose={() => setOpen(false)}
-        title={label}
-        testID={`${testID}-sheet`}
-      >
-        <View className="gap-1">
-          {options.map(option => (
-            <ListRow
-              key={option.value}
-              title={option.label}
-              onPress={() => {
-                onSelect(option.value);
-                setOpen(false);
-              }}
-              right={
-                option.value === value ? (
-                  <Check size={18} color={theme.colors.primary} />
-                ) : undefined
-              }
-              testID={`${testID}-${option.value}`}
-            />
-          ))}
-        </View>
-      </BottomSheet>
-    </>
+      </SelectTrigger>
+      <SelectContent insets={{ top: insets.top, bottom: insets.bottom, left: 12, right: 12 }} className="min-w-[180px]">
+        {options.map(option => (
+          <SelectItem
+            key={option.value}
+            value={option.value}
+            label={option.label}
+            testID={`${testID}-${option.value}`}
+          />
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -141,6 +123,7 @@ export function TranslateScreen() {
   const [loading, setLoading] = React.useState(false);
   const [failed, setFailed] = React.useState(false);
   const requestRef = React.useRef(0);
+  const [furiganaEnabled, setFuriganaEnabled] = useFuriganaPreference();
 
   const sameLanguage = from !== "auto" && from === to;
 
@@ -208,7 +191,7 @@ export function TranslateScreen() {
 
   const handleCopy = () => {
     if (!result?.text) return;
-    Clipboard.setString(result.text);
+    copyText(result.text);
     show(t("common.copied"), { type: "success" });
   };
 
@@ -229,6 +212,19 @@ export function TranslateScreen() {
     value,
     label: langLabel(value, t),
   }));
+
+  // Phía tiếng Nhật của cặp dịch (nếu có chữ Hán) -> panel đối chiếu có furigana, như web
+  const trimmedSource = source.trim();
+  const effectiveFrom = from === "auto" ? result?.detected : from;
+  const japaneseText =
+    result?.text && !loading
+      ? effectiveFrom === "ja"
+        ? trimmedSource
+        : to === "ja"
+          ? result.text
+          : ""
+      : "";
+  const otherText = effectiveFrom === "ja" ? (result?.text ?? "") : trimmedSource;
 
   return (
     <Screen title={t("translatePage.title")} scroll testID="translate-screen">
@@ -320,7 +316,7 @@ export function TranslateScreen() {
                   <IconButton
                     icon={<Share2 size={18} color={theme.colors.primary} />}
                     onPress={() => void handleShare()}
-                    accessibilityLabel={SHARE_LABEL}
+                    accessibilityLabel={t("common.share")}
                     size="sm"
                     testID="translate-share"
                   />
@@ -369,6 +365,15 @@ export function TranslateScreen() {
             )}
           </View>
         </Card>
+
+        {japaneseText && hasKanji(japaneseText) ? (
+          <ContrastPanel
+            japanese={japaneseText}
+            other={otherText}
+            enabled={furiganaEnabled}
+            onEnabledChange={setFuriganaEnabled}
+          />
+        ) : null}
       </View>
     </Screen>
   );

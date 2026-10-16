@@ -5,10 +5,16 @@
  * URL backend đọc từ `.env` (xem `.env.example`) — file `.env` đã được gitignore.
  * Đổi giá trị trong `.env` thì khởi động lại Metro kèm `--reset-cache`.
  */
-import { API_BASE_URL as ENV_API_BASE_URL } from "@env";
+import {
+  API_BASE_URL as ENV_API_BASE_URL,
+  GOOGLE_WEB_CLIENT_ID as ENV_GOOGLE_WEB_CLIENT_ID,
+} from "@env";
 
 /** URL backend Langoo API (không có dấu `/` ở cuối). */
 export const API_BASE_URL: string = (ENV_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
+
+/** Web OAuth client ID cho Google Sign-In (rỗng = chưa bật). */
+export const GOOGLE_WEB_CLIENT_ID: string = (ENV_GOOGLE_WEB_CLIENT_ID ?? "").trim();
 
 if (!API_BASE_URL) {
   console.warn(

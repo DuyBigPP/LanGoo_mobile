@@ -11,6 +11,7 @@ import {
   updateCollectionItem,
 } from "@/api/collections";
 import type { FetchItemsParams } from "@/api/collections";
+import { useAuth } from "@/contexts/AuthContext";
 import { useActiveProfile } from "@/hooks/use-profile";
 
 export interface ItemFilters {
@@ -35,10 +36,12 @@ function toParams(filters: ItemFilters): FetchItemsParams {
 /** Danh sách sổ tay của hồ sơ đang học (lọc theo profile_id active). */
 export function useCollectionsQuery(enabled = true) {
   const { profileId } = useActiveProfile();
+  // Sổ tay cần đăng nhập — sheet "Thêm vào sổ tay" mount được ở màn công khai
+  const authenticated = useAuth().status === "authenticated";
   return useQuery({
     queryKey: [...collectionKeys.list, profileId ?? "none"],
     queryFn: () => fetchCollections({ limit: 100, profile_id: profileId ?? undefined }),
-    enabled,
+    enabled: enabled && authenticated,
     staleTime: 30_000,
   });
 }
@@ -46,6 +49,7 @@ export function useCollectionsQuery(enabled = true) {
 /** Danh sách sổ tay có phân trang (pager) — theo hồ sơ đang học. */
 export function useCollectionsInfiniteQuery(enabled = true, pageSize = 12) {
   const { profileId } = useActiveProfile();
+  const authenticated = useAuth().status === "authenticated";
   return useInfiniteQuery({
     queryKey: [...collectionKeys.list, "infinite", profileId ?? "none", pageSize] as const,
     queryFn: ({ pageParam }) =>
@@ -56,7 +60,7 @@ export function useCollectionsInfiniteQuery(enabled = true, pageSize = 12) {
       }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor,
-    enabled,
+    enabled: enabled && authenticated,
     staleTime: 30_000,
   });
 }

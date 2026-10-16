@@ -29,9 +29,9 @@ const LANGUAGE_MARKS: Record<string, { label: string; stamp?: boolean }> = {
 
 /** Cỡ theo bản web: sm/md/lg = 11/13/15px kèm đệm + bo góc tương ứng. */
 const SIZE_CLASS: Record<FlagSize, string> = {
-  sm: "rounded-md px-1.5 py-0.5 text-[11px]",
-  md: "rounded-md px-2 py-0.5 text-sm",
-  lg: "rounded-lg px-2.5 py-1 text-base",
+  sm: "rounded-[6px] px-1.5 py-0.5 text-[11px]",
+  md: "rounded-[6px] px-2 py-0.5 text-[13px]",
+  lg: "rounded-sm px-2.5 py-1 text-[15px]",
 };
 
 /**

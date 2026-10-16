@@ -1,65 +1,47 @@
 /**
  * Bottom sheet vẽ chữ Hán để nhận dạng (port từ `HandwritingDialog` bên web).
  *
- * Khác bản web ở chỗ dùng `react-native-svg` + `PanResponder` thay cho canvas,
- * nhưng giữ nguyên hành vi: tự nhận dạng sau khi ngừng vẽ, danh sách gợi ý
- * kèm độ tin cậy, chốt gợi ý thì trả ký tự về màn Từ điển qua `onPick`
- * (không điều hướng sang màn khác như bản full-screen trước đây).
+ * Bố cục như web: hàng gợi ý nhỏ cuộn ngang ở trên → khung vẽ → từ đang ghép → một hàng nút
+ * (Xoá tất cả · Hoàn tác · số nét · Nhận dạng/Tra cứu). Tự nhận dạng sau khi ngừng vẽ; chạm gợi ý
+ * thì ghép vào "từ đang viết", bấm Tra cứu thì trả từ về màn Từ điển qua `onPick`.
  */
 
 import * as React from "react";
-import {
-  ActivityIndicator,
-  PanResponder,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-  type GestureResponderEvent,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Eraser, Search, Undo2 } from "lucide-react-native";
-import Svg, { Circle, Line, Path } from "react-native-svg";
-import { AppText, BottomSheet, Button } from "@/components/ui";
+import { Delete, Eraser, Search, Undo2 } from "lucide-react-native";
+import { AppText, BottomSheet, Button, IconButton } from "@/components/ui";
 import { useT } from "@/i18n";
 import {
   getKanjiRecognizer,
   recognizeInk,
-  type InkPoint,
   type InkStroke,
   type KanjiCandidate,
 } from "@/lib/kanji-ink";
 import { radius, spacing, useTheme } from "@/theme";
+import { CANDIDATE_SIZE, CandidateStrip } from "./handwriting/CandidateStrip";
+import { InkCanvas } from "./handwriting/InkCanvas";
 
 export interface HandwritingSheetProps {
   visible: boolean;
   onClose: () => void;
-  /** Người dùng chốt một ký tự trong gợi ý */
-  onPick: (char: string) => void;
+  /** Người dùng chốt từ đã ghép (1 hoặc nhiều chữ) để tra */
+  onPick: (text: string) => void;
 }
 
 type Status = "idle" | "loading-model" | "recognizing" | "error";
 
-/** Bề dày nét hiển thị trong khung vẽ (khớp bản web) */
-const STROKE_WIDTH = 10;
 /** Ngừng vẽ bao lâu thì tự nhận dạng lại */
 const RECOGNIZE_DELAY = 600;
-/** Số cột của lưới gợi ý */
-const CANDIDATE_COLUMNS = 4;
 /** Tỷ lệ chiều cao sheet so với màn hình */
 const SHEET_MAX_RATIO = 0.92;
 /** Kích thước khung vẽ tối đa / tối thiểu (px) */
 const CANVAS_MAX = 340;
 const CANVAS_MIN = 120;
-/**
- * Chiều cao phần khung của sheet: lề trên + tay cầm + tiêu đề (nút X 36) + lề dưới.
- * Dùng để tính chỗ thực sự còn lại cho khung vẽ.
- */
+/** Phần khung của sheet: lề trên + tay cầm + tiêu đề (nút X 36) + lề dưới. */
 const SHEET_CHROME_HEIGHT = spacing.sm + 4 + spacing.sm + 36 + spacing.sm + spacing.lg;
-/** Chiều cao tối thiểu vùng điều khiển dưới khung vẽ: 2 nút + nút nhận dạng + trạng thái + credit + lề dưới */
-const PANEL_MIN_HEIGHT =
-  44 + spacing.md + 44 + spacing.md + 24 + spacing.md + 36 + spacing.sm;
+/** Phần còn lại ngoài khung vẽ: hàng gợi ý + hàng nút + dòng trạng thái/lỗi + các khoảng cách. */
+const PANEL_HEIGHT = CANDIDATE_SIZE + spacing.md + 44 + spacing.md + 24 + spacing.md;
 
 /** Sheet vẽ chữ Hán — nhận dạng chạy hoàn toàn trên máy (DaKanji ONNX). */
 export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetProps) {
@@ -68,35 +50,34 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
-  // Khung vẽ vuông, vừa cả bề ngang lẫn phần còn lại của sheet sau khi chừa chỗ
-  // cho hàng nút + trạng thái bên dưới -> không bao giờ tràn ra ngoài sheet.
+  // Khung vẽ vuông, vừa cả bề ngang lẫn phần còn lại của sheet -> không tràn ra ngoài sheet.
   const canvasSize = React.useMemo(() => {
-    const maxSheetHeight = height * SHEET_MAX_RATIO;
     const availableWidth = width - spacing.lg * 2;
     const availableHeight =
-      maxSheetHeight - SHEET_CHROME_HEIGHT - insets.bottom - spacing.md - PANEL_MIN_HEIGHT;
+      height * SHEET_MAX_RATIO - SHEET_CHROME_HEIGHT - insets.bottom - PANEL_HEIGHT;
     return Math.max(CANVAS_MIN, Math.min(CANVAS_MAX, availableWidth, availableHeight));
   }, [height, insets.bottom, width]);
 
-  const candidateSize = Math.floor(
-    (width - spacing.lg * 2 - spacing.sm * (CANDIDATE_COLUMNS - 1)) / CANDIDATE_COLUMNS,
-  );
-
   const [strokes, setStrokes] = React.useState<InkStroke[]>([]);
-  const [active, setActive] = React.useState<InkPoint[]>([]);
   const [status, setStatus] = React.useState<Status>("loading-model");
   const [candidates, setCandidates] = React.useState<KanjiCandidate[]>([]);
   const [errorMessage, setErrorMessage] = React.useState("");
+  // Từ đang ghép: chọn gợi ý -> chữ vào đây, ô vẽ xoá để viết chữ kế (mirror web ComposedWord)
+  const [composed, setComposed] = React.useState<string[]>([]);
 
-  // Bản ref để PanResponder/callback không đọc phải state cũ
+  // Bản ref để callback hẹn giờ không đọc phải state cũ
   const strokesRef = React.useRef<InkStroke[]>([]);
-  const activeRef = React.useRef<InkPoint[]>([]);
   const busyRef = React.useRef(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelScheduled = React.useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = null;
+  }, []);
+
+  const commitStrokes = React.useCallback((next: InkStroke[]) => {
+    strokesRef.current = next;
+    setStrokes(next);
   }, []);
 
   const runRecognize = React.useCallback(async () => {
@@ -109,8 +90,7 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
     busyRef.current = true;
     setStatus("recognizing");
     try {
-      const result = await recognizeInk(current);
-      setCandidates(result);
+      setCandidates(await recognizeInk(current));
       setStatus("idle");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t("dict.inkRecognizeError"));
@@ -125,10 +105,24 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
     timerRef.current = setTimeout(() => void runRecognize(), RECOGNIZE_DELAY);
   }, [cancelScheduled, runRecognize]);
 
-  const commitStrokes = React.useCallback((next: InkStroke[]) => {
-    strokesRef.current = next;
-    setStrokes(next);
-  }, []);
+  const loadModel = React.useCallback(
+    (isCancelled: () => boolean = () => false) => {
+      setErrorMessage("");
+      setStatus("loading-model");
+      void getKanjiRecognizer()
+        .then(() => {
+          if (isCancelled()) return;
+          if (strokesRef.current.flat().length >= 2) void runRecognize();
+          else setStatus("idle");
+        })
+        .catch((error: unknown) => {
+          if (isCancelled()) return;
+          setErrorMessage(error instanceof Error ? error.message : t("dict.inkLoadError"));
+          setStatus("error");
+        });
+    },
+    [runRecognize, t],
+  );
 
   // Mở sheet -> xoá nét cũ + nạp trước model; đóng sheet -> dừng mọi việc đang chờ
   React.useEffect(() => {
@@ -136,81 +130,28 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
       cancelScheduled();
       return;
     }
-    activeRef.current = [];
-    setActive([]);
     commitStrokes([]);
     setCandidates([]);
-    setErrorMessage("");
+    setComposed([]);
     busyRef.current = false;
-    setStatus("loading-model");
     let cancelled = false;
-    void getKanjiRecognizer()
-      .then(() => {
-        if (!cancelled) setStatus("idle");
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        setErrorMessage(error instanceof Error ? error.message : t("dict.inkLoadError"));
-        setStatus("error");
-      });
+    loadModel(() => cancelled);
     return () => {
       cancelled = true;
       cancelScheduled();
     };
-  }, [cancelScheduled, commitStrokes, t, visible]);
+  }, [cancelScheduled, commitStrokes, loadModel, visible]);
 
-  const finishStroke = React.useCallback(() => {
-    const stroke = activeRef.current;
-    if (stroke.length === 0) return;
-    activeRef.current = [];
-    setActive([]);
-    commitStrokes([...strokesRef.current, stroke]);
-    scheduleRecognize();
-  }, [commitStrokes, scheduleRecognize]);
-
-  /** Toạ độ chạm -> toạ độ px trong khung vẽ (kẹp trong khung cho an toàn) */
-  const pointFromEvent = React.useCallback(
-    (event: GestureResponderEvent): InkPoint => {
-      const { locationX, locationY } = event.nativeEvent;
-      return {
-        x: Math.max(0, Math.min(canvasSize, locationX)),
-        y: Math.max(0, Math.min(canvasSize, locationY)),
-      };
+  const handleStrokeEnd = React.useCallback(
+    (stroke: InkStroke) => {
+      commitStrokes([...strokesRef.current, stroke]);
+      scheduleRecognize();
     },
-    [canvasSize],
-  );
-
-  const panResponder = React.useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        // Đang vẽ thì không nhường cử chỉ cho ScrollView
-        onPanResponderTerminationRequest: () => false,
-        onPanResponderGrant: event => {
-          if (busyRef.current) return;
-          // Người dùng vẽ tiếp -> huỷ lần nhận dạng đang chờ
-          cancelScheduled();
-          const next = [pointFromEvent(event)];
-          activeRef.current = next;
-          setActive(next);
-        },
-        onPanResponderMove: event => {
-          if (activeRef.current.length === 0) return;
-          const next = [...activeRef.current, pointFromEvent(event)];
-          activeRef.current = next;
-          setActive(next);
-        },
-        onPanResponderRelease: () => finishStroke(),
-        onPanResponderTerminate: () => finishStroke(),
-      }),
-    [cancelScheduled, finishStroke, pointFromEvent],
+    [commitStrokes, scheduleRecognize],
   );
 
   const handleClear = React.useCallback(() => {
     cancelScheduled();
-    activeRef.current = [];
-    setActive([]);
     commitStrokes([]);
     setCandidates([]);
   }, [cancelScheduled, commitStrokes]);
@@ -219,49 +160,20 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
     cancelScheduled();
     const next = strokesRef.current.slice(0, -1);
     commitStrokes(next);
-    if (next.length === 0) {
-      setCandidates([]);
-      return;
-    }
-    scheduleRecognize();
+    if (next.length === 0) setCandidates([]);
+    else scheduleRecognize();
   }, [cancelScheduled, commitStrokes, scheduleRecognize]);
 
-  const handleRetry = React.useCallback(() => {
-    setErrorMessage("");
-    setStatus("loading-model");
-    void getKanjiRecognizer()
-      .then(() => {
-        if (strokesRef.current.flat().length >= 2) {
-          void runRecognize();
-          return;
-        }
-        setStatus("idle");
-      })
-      .catch((error: unknown) => {
-        setErrorMessage(error instanceof Error ? error.message : t("dict.inkLoadError"));
-        setStatus("error");
-      });
-  }, [runRecognize, t]);
-
-  /** Chốt một chữ trong gợi ý -> trả ký tự về màn Từ điển (không điều hướng) */
+  /** Chọn chữ trong gợi ý -> ghép vào từ đang viết (không đóng sheet), xoá nét để viết chữ kế */
   const handlePick = React.useCallback(
     (char: string) => {
-      cancelScheduled();
-      onPick(char);
+      setComposed(previous => [...previous, char]);
+      handleClear();
     },
-    [cancelScheduled, onPick],
+    [handleClear],
   );
 
-  const inkColor = theme.colors.text;
-  // Nét đã vẽ xong chỉ vẽ lại khi danh sách nét đổi (nét đang vẽ ở lớp riêng)
-  const finishedShapes = React.useMemo(
-    () =>
-      strokes.map((stroke, index) => (
-        <InkStrokeShape key={index} stroke={stroke} color={inkColor} width={STROKE_WIDTH} />
-      )),
-    [inkColor, strokes],
-  );
-
+  const composedText = composed.join("");
   const busy = status === "recognizing" || status === "loading-model";
   const strokeCount = strokes.length;
 
@@ -274,232 +186,115 @@ export function HandwritingSheet({ visible, onClose, onPick }: HandwritingSheetP
       testID="handwriting-sheet"
     >
       <View style={styles.body}>
-        {/* Ô vẽ vuông + đường dóng 2×2 như ô tập viết.
-            Cố ý để NGOÀI ScrollView: PanResponder chỉ nhận cử chỉ sau một vòng
-            JS, nếu nằm trong ScrollView thì cú kéo đầu tiên có thể bị cuộn trang giành mất. */}
-        <View style={styles.canvasWrap}>
+        <CandidateStrip candidates={status === "idle" ? candidates : []} onPick={handlePick} />
+
+        <InkCanvas
+          size={canvasSize}
+          strokes={strokes}
+          loadingModel={status === "loading-model"}
+          busy={busy}
+          onStrokeStart={cancelScheduled}
+          onStrokeEnd={handleStrokeEnd}
+        />
+
+        {composed.length > 0 ? (
           <View
-            testID="handwriting-canvas"
-            style={[
-              styles.canvas,
-              {
-                width: canvasSize,
-                height: canvasSize,
-                backgroundColor: theme.colors.card,
-                borderColor: theme.colors.border,
-              },
-            ]}
-            {...panResponder.panHandlers}
+            style={styles.composedRow}
+            accessibilityLabel={t("dict.inkComposed")}
+            testID="handwriting-composed"
           >
-            <Svg width={canvasSize} height={canvasSize} pointerEvents="none">
-              <Line
-                x1={canvasSize / 2}
-                y1={0}
-                x2={canvasSize / 2}
-                y2={canvasSize}
-                stroke={theme.colors.border}
-                strokeWidth={1}
-              />
-              <Line
-                x1={0}
-                y1={canvasSize / 2}
-                x2={canvasSize}
-                y2={canvasSize / 2}
-                stroke={theme.colors.border}
-                strokeWidth={1}
-              />
-              {finishedShapes}
-              {active.length > 0 ? (
-                <InkStrokeShape stroke={active} color={inkColor} width={STROKE_WIDTH} />
-              ) : null}
-            </Svg>
-            {status === "loading-model" ? (
+            {composed.map((char, index) => (
               <View
-                style={[styles.canvasOverlay, { backgroundColor: theme.colors.card }]}
-                testID="handwriting-canvas-loading"
+                key={`${char}-${index}`}
+                style={[
+                  styles.composedChar,
+                  { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+                ]}
               >
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-                <AppText variant="caption">{t("dict.inkLoading")}</AppText>
-              </View>
-            ) : null}
-          </View>
-        </View>
-
-        <ScrollView
-          style={styles.panel}
-          contentContainerStyle={styles.panelContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.actions}>
-            <Button
-              label={t("dict.inkUndo")}
-              variant="outline"
-              size="sm"
-              icon={<Undo2 size={16} color={theme.colors.text} />}
-              onPress={handleUndo}
-              disabled={strokeCount === 0}
-              testID="handwriting-undo"
-            />
-            <Button
-              label={t("dict.inkClear")}
-              variant="outline"
-              size="sm"
-              icon={<Eraser size={16} color={theme.colors.text} />}
-              onPress={handleClear}
-              disabled={strokeCount === 0}
-              testID="handwriting-clear"
-            />
-          </View>
-
-          <Button
-            label={t("dict.inkRecognize")}
-            size="sm"
-            icon={
-              status === "recognizing" ? (
-                <ActivityIndicator size="small" color={theme.colors.onPrimary} />
-              ) : (
-                <Search size={16} color={theme.colors.onPrimary} />
-              )
-            }
-            onPress={() => void runRecognize()}
-            disabled={strokeCount === 0 || busy}
-            fullWidth
-            testID="handwriting-recognize"
-          />
-
-          {/* Trạng thái: số nét / đang nhận dạng / lỗi */}
-          <View style={styles.status} testID="handwriting-status">
-            {status === "error" ? (
-              <>
-                <AppText variant="caption" color="danger" center>
-                  {errorMessage}
+                <AppText size="lg" weight="semibold">
+                  {char}
                 </AppText>
-                <Button
-                  label={t("common.retry")}
-                  variant="outline"
-                  size="sm"
-                  onPress={handleRetry}
-                  style={styles.center}
-                  testID="handwriting-retry"
-                />
-              </>
-            ) : status === "idle" ? (
-              <AppText variant="caption" center>
+              </View>
+            ))}
+            <IconButton
+              icon={<Delete size={16} color={theme.colors.textMuted} />}
+              accessibilityLabel={t("dict.inkComposedUndo")}
+              onPress={() => setComposed(previous => previous.slice(0, -1))}
+              size="sm"
+              testID="handwriting-composed-undo"
+            />
+          </View>
+        ) : null}
+
+        {/* Một hàng như web: Xoá tất cả · Hoàn tác · số nét · Nhận dạng/Tra cứu */}
+        <View style={styles.actions}>
+          <IconButton
+            icon={<Eraser size={18} color={theme.colors.text} />}
+            onPress={handleClear}
+            accessibilityLabel={t("dict.inkClear")}
+            variant="outline"
+            disabled={strokeCount === 0}
+            testID="handwriting-clear"
+          />
+          <IconButton
+            icon={<Undo2 size={18} color={theme.colors.text} />}
+            onPress={handleUndo}
+            accessibilityLabel={t("dict.inkUndo")}
+            variant="outline"
+            disabled={strokeCount === 0}
+            testID="handwriting-undo"
+          />
+          <View style={styles.statusCell} testID="handwriting-status">
+            {status === "recognizing" ? (
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+            ) : (
+              <AppText variant="caption" numberOfLines={1}>
                 {t("dict.inkStrokes", { count: strokeCount })}
               </AppText>
-            ) : (
-              <View style={styles.statusRow}>
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-                <AppText variant="caption">
-                  {status === "recognizing" ? t("dict.inkRecognizing") : t("dict.inkLoading")}
-                </AppText>
-              </View>
             )}
           </View>
+          <Button
+            label={composedText ? t("dict.inkSearch") : t("dict.inkRecognize")}
+            size="sm"
+            icon={<Search size={16} color={theme.colors.onPrimary} />}
+            onPress={() => (composedText ? onPick(composedText) : void runRecognize())}
+            disabled={composedText ? false : strokeCount === 0 || busy}
+            testID="handwriting-recognize"
+          />
+        </View>
 
-          {/* Gợi ý ký tự — bấm để tra luôn */}
-          {status === "idle" && candidates.length > 0 ? (
-            <View style={styles.candidates} testID="handwriting-candidates">
-              {candidates.map((candidate, index) => {
-                const percent = (candidate.score * 100).toFixed(1);
-                return (
-                  <Pressable
-                    key={`${candidate.char}-${index}`}
-                    testID={`handwriting-candidate-${index}`}
-                    onPress={() => handlePick(candidate.char)}
-                    accessibilityRole="button"
-                    accessibilityLabel={candidate.char}
-                    accessibilityHint={t("dict.confidence", { percent })}
-                    style={({ pressed }) => [
-                      styles.candidate,
-                      {
-                        width: candidateSize,
-                        height: candidateSize,
-                        backgroundColor: theme.colors.card,
-                        borderColor:
-                          index === 0 ? theme.colors.primary : theme.colors.border,
-                      },
-                      pressed ? styles.pressed : null,
-                    ]}
-                  >
-                    <AppText size="xxl" weight="semibold">
-                      {candidate.char}
-                    </AppText>
-                    <AppText size="xs" color="muted">
-                      {`${percent}%`}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          ) : null}
-
-          <AppText variant="caption" center>
-            {t("dict.inkCredit")}
-          </AppText>
-        </ScrollView>
+        {status === "error" ? (
+          <View style={styles.errorRow}>
+            <AppText variant="caption" color="danger" style={styles.errorText}>
+              {errorMessage}
+            </AppText>
+            <Button
+              label={t("common.retry")}
+              variant="outline"
+              size="sm"
+              onPress={() => loadModel()}
+              testID="handwriting-retry"
+            />
+          </View>
+        ) : null}
       </View>
     </BottomSheet>
   );
 }
 
-interface InkStrokeShapeProps {
-  stroke: InkPoint[];
-  color: string;
-  width: number;
-}
-
-/** Một nét vẽ: đa đoạn thẳng bo tròn đầu/cuối; nét 1 điểm thì vẽ chấm tròn. */
-function InkStrokeShape({ stroke, color, width }: InkStrokeShapeProps) {
-  if (stroke.length === 0) return null;
-  if (stroke.length === 1) {
-    return <Circle cx={stroke[0].x} cy={stroke[0].y} r={width / 2} fill={color} />;
-  }
-  const d = stroke
-    .map(
-      (point, index) =>
-        `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`,
-    )
-    .join(" ");
-  return (
-    <Path
-      d={d}
-      stroke={color}
-      strokeWidth={width}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-  );
-}
-
 const styles = StyleSheet.create({
   body: { gap: spacing.md, flexShrink: 1 },
-  canvasWrap: { alignItems: "center" },
-  canvas: {
-    borderWidth: 1,
-    borderRadius: radius.xl,
-    overflow: "hidden",
-  },
-  canvasOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-  },
-  // flexShrink để danh sách gợi ý dài thì cuộn bên trong, không đẩy tràn sheet
-  panel: { flexShrink: 1 },
-  panelContent: { gap: spacing.md, paddingBottom: spacing.sm },
-  actions: { flexDirection: "row", gap: spacing.sm },
-  status: { minHeight: 24, alignItems: "center", justifyContent: "center", gap: spacing.sm },
-  statusRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  candidates: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  candidate: {
+  actions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  statusCell: { flex: 1, alignItems: "center" },
+  errorRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  errorText: { flex: 1 },
+  composedRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  composedChar: {
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderRadius: radius.md,
   },
-  center: { alignSelf: "center" },
-  pressed: { opacity: 0.85 },
 });

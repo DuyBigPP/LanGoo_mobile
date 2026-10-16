@@ -1,6 +1,5 @@
 import * as React from "react";
 import { StyleSheet, View } from "react-native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Minus, Plus } from "lucide-react-native";
 import { ApiError } from "@/api/client";
 import {
@@ -8,20 +7,19 @@ import {
   Button,
   Card,
   IconButton,
-  Screen,
+  Input,
+  SectionHeader,
   SegmentedControl,
   Skeleton,
   toastError,
   useToast,
 } from "@/components/ui";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { APP_VERSION } from "@/config/env";
 import { useSettingsQuery, useUpdateSettingsMutation } from "@/hooks/use-profile";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
-import type { RootStackParamList } from "@/navigation/types";
 import { spacing, useTheme, useThemeControls } from "@/theme";
-
-type SettingsScreenProps = NativeStackScreenProps<RootStackParamList, "Settings">;
 
 /** Giá trị mặc định khi máy chủ chưa có cài đặt (giống bản web). */
 const DEFAULT_GOAL = 20;
@@ -38,32 +36,14 @@ const GOAL_CONFIG: StepperConfig = { min: 5, max: 100, step: 5 };
 const NEW_CONFIG: StepperConfig = { min: 1, max: 9999, step: 5 };
 const REVIEW_CONFIG: StepperConfig = { min: 1, max: 9999, step: 10 };
 
-/** Thiếu khoá settings.themeSystem / settings.themeMode — dùng tạm nhãn tiếng Việt. */
-const THEME_SYSTEM_LABEL = "Hệ thống";
-const THEME_MODE_LABEL = "Giao diện";
+function deviceTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+}
 
-/** Màn Cài đặt học tập: mục tiêu ngày, giới hạn SRS, chế độ giao diện, phiên bản app. */
-export function SettingsScreen({ navigation }: SettingsScreenProps) {
+/** Chế độ giao diện: theo hệ thống / sáng / tối (theme lưu cục bộ trên máy) — dùng cho cả guest. */
+export function ThemeModeControl({ testID = "settings-theme" }: { testID?: string }) {
   const t = useT();
   const { theme, manual, toggle, resetToSystem } = useThemeControls();
-  const { show } = useToast();
-  const settings = useSettingsQuery();
-  const updateSettings = useUpdateSettingsMutation();
-
-  const [goal, setGoal] = React.useState(DEFAULT_GOAL);
-  const [newPerDay, setNewPerDay] = React.useState(DEFAULT_NEW_PER_DAY);
-  const [reviewPerDay, setReviewPerDay] = React.useState(DEFAULT_REVIEW_PER_DAY);
-  const hydratedRef = React.useRef(false);
-
-  // Nạp giá trị từ máy chủ đúng một lần để không ghi đè lúc người dùng đang chỉnh.
-  React.useEffect(() => {
-    if (!settings.data || hydratedRef.current) return;
-    setGoal(settings.data.daily_goal ?? DEFAULT_GOAL);
-    setNewPerDay(settings.data.srs_new_per_day ?? DEFAULT_NEW_PER_DAY);
-    setReviewPerDay(settings.data.srs_review_per_day ?? DEFAULT_REVIEW_PER_DAY);
-    hydratedRef.current = true;
-  }, [settings.data]);
-
   const themeValue = manual ? theme.mode : "system";
 
   const handleThemeChange = (value: string) => {
@@ -75,29 +55,62 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     if (theme.mode !== value) toggle();
   };
 
+  return (
+    <SegmentedControl
+      options={[
+        { value: "system", label: t("settings.themeSystem") },
+        { value: "light", label: t("settings.themeLight") },
+        { value: "dark", label: t("settings.themeDark") },
+      ]}
+      value={themeValue}
+      onChange={handleThemeChange}
+      testID={testID}
+    />
+  );
+}
+
+/** Khối Cài đặt trong Hồ sơ (mirror web ProfileSettingsSection): mục tiêu, SRS, múi giờ, giao diện, ngôn ngữ, phiên bản. */
+export function SettingsSection() {
+  const t = useT();
+  const { show } = useToast();
+  const settings = useSettingsQuery();
+  const updateSettings = useUpdateSettingsMutation();
+
+  const [goal, setGoal] = React.useState(DEFAULT_GOAL);
+  const [newPerDay, setNewPerDay] = React.useState(DEFAULT_NEW_PER_DAY);
+  const [reviewPerDay, setReviewPerDay] = React.useState(DEFAULT_REVIEW_PER_DAY);
+  const [timezone, setTimezone] = React.useState("");
+  const hydratedRef = React.useRef(false);
+
+  // Nạp giá trị từ máy chủ đúng một lần để không ghi đè lúc người dùng đang chỉnh.
+  React.useEffect(() => {
+    if (!settings.data || hydratedRef.current) return;
+    setGoal(settings.data.daily_goal ?? DEFAULT_GOAL);
+    setNewPerDay(settings.data.srs_new_per_day ?? DEFAULT_NEW_PER_DAY);
+    setReviewPerDay(settings.data.srs_review_per_day ?? DEFAULT_REVIEW_PER_DAY);
+    setTimezone(settings.data.timezone ?? deviceTimezone());
+    hydratedRef.current = true;
+  }, [settings.data]);
+
   const handleSave = async () => {
     try {
+      const tz = timezone.trim();
       await updateSettings.mutateAsync({
         daily_goal: goal,
         srs_new_per_day: newPerDay,
         srs_review_per_day: reviewPerDay,
+        ...(tz ? { timezone: tz } : {}),
       });
       show(t("settings.saved"), { type: "success" });
     } catch (error) {
+      // Múi giờ sai định dạng IANA sẽ bị máy chủ từ chối và hiện ở đây
       toastError(ApiError.from(error).message);
     }
   };
 
   return (
-    <Screen
-      title={t("settings.title")}
-      onBack={() => navigation.goBack()}
-      scroll
-      onRefresh={() => void settings.refetch()}
-      refreshing={settings.isRefetching}
-      contentStyle={styles.content}
-      testID="settings-screen"
-    >
+    <View testID="profile-settings">
+      <SectionHeader title={t("settings.title")} />
       {settings.isPending ? (
         <Card style={styles.card}>
           <Skeleton height={18} width="50%" />
@@ -114,56 +127,57 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
             variant="outline"
             size="sm"
             onPress={() => void settings.refetch()}
-            style={styles.retry}
+            style={styles.center}
             testID="settings-retry"
           />
         </Card>
       ) : (
-        <>
-          <Card style={styles.card}>
-            <NumberStepper
-              label={t("settings.dailyGoal")}
-              value={goal}
-              unit={t("settings.dailyGoalUnit", { count: goal })}
-              onChange={setGoal}
-              config={GOAL_CONFIG}
-              testID="settings-daily-goal"
-            />
-          </Card>
+        <Card style={styles.card}>
+          <NumberStepper
+            label={t("settings.dailyGoal")}
+            value={goal}
+            unit={t("settings.dailyGoalUnit", { count: goal })}
+            onChange={setGoal}
+            config={GOAL_CONFIG}
+            testID="settings-daily-goal"
+          />
+          <NumberStepper
+            label={t("settings.newPerDay")}
+            value={newPerDay}
+            unit={`${formatNumber(newPerDay)} ${t("study.cardUnit")}`}
+            onChange={setNewPerDay}
+            config={NEW_CONFIG}
+            testID="settings-new-per-day"
+          />
+          <NumberStepper
+            label={t("settings.reviewPerDay")}
+            value={reviewPerDay}
+            unit={`${formatNumber(reviewPerDay)} ${t("study.reviewUnit")}`}
+            onChange={setReviewPerDay}
+            config={REVIEW_CONFIG}
+            testID="settings-review-per-day"
+          />
 
-          <Card style={styles.card}>
-            <NumberStepper
-              label={t("settings.newPerDay")}
-              value={newPerDay}
-              unit={`${formatNumber(newPerDay)} ${t("study.cardUnit")}`}
-              onChange={setNewPerDay}
-              config={NEW_CONFIG}
-              testID="settings-new-per-day"
+          {/* Múi giờ IANA: gõ tay hoặc lấy theo máy */}
+          <View style={styles.stepper}>
+            <Input
+              label={t("settings.timezone")}
+              value={timezone}
+              onChangeText={setTimezone}
+              autoCapitalize="none"
+              autoCorrect={false}
+              testID="settings-timezone"
             />
-            <NumberStepper
-              label={t("settings.reviewPerDay")}
-              value={reviewPerDay}
-              unit={`${formatNumber(reviewPerDay)} ${t("study.reviewUnit")}`}
-              onChange={setReviewPerDay}
-              config={REVIEW_CONFIG}
-              testID="settings-review-per-day"
+            <AppText variant="caption">{t("settings.timezoneHint")}</AppText>
+            <Button
+              label={t("settings.useDevice")}
+              variant="outline"
+              size="sm"
+              onPress={() => setTimezone(deviceTimezone())}
+              style={styles.center}
+              testID="settings-timezone-device"
             />
-          </Card>
-
-          {/* Chế độ giao diện: theo hệ thống / sáng / tối (theme lưu cục bộ trên máy) */}
-          <Card style={styles.card}>
-            <AppText variant="label">{THEME_MODE_LABEL}</AppText>
-            <SegmentedControl
-              options={[
-                { value: "system", label: THEME_SYSTEM_LABEL },
-                { value: "light", label: t("theme.light") },
-                { value: "dark", label: t("theme.dark") },
-              ]}
-              value={themeValue}
-              onChange={handleThemeChange}
-              testID="settings-theme"
-            />
-          </Card>
+          </View>
 
           <Button
             label={t("settings.save")}
@@ -172,12 +186,22 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
             fullWidth
             testID="settings-save"
           />
-          <AppText variant="caption" center>
-            {t("settings.appVersion", { version: APP_VERSION })}
-          </AppText>
-        </>
+        </Card>
       )}
-    </Screen>
+
+      {/* Giao diện + ngôn ngữ + phiên bản: cục bộ, không phụ thuộc máy chủ */}
+      <Card style={[styles.card, styles.local]}>
+        <AppText variant="label">{t("settings.themeMode")}</AppText>
+        <ThemeModeControl />
+        <View style={styles.langRow}>
+          <AppText variant="label">{t("language.label")}</AppText>
+          <LanguageToggle testID="profile-language-toggle" />
+        </View>
+        <AppText variant="caption" center>
+          {t("settings.appVersion", { version: APP_VERSION })}
+        </AppText>
+      </Card>
+    </View>
   );
 }
 
@@ -198,6 +222,7 @@ function NumberStepper({
   testID?: string;
 }) {
   const theme = useTheme();
+  const t = useT();
   const clamp = (next: number) => Math.min(config.max, Math.max(config.min, next));
 
   return (
@@ -210,7 +235,7 @@ function NumberStepper({
         <IconButton
           icon={<Minus size={18} color={theme.colors.text} />}
           onPress={() => onChange(clamp(value - config.step))}
-          accessibilityLabel={`Giảm ${label}`}
+          accessibilityLabel={t("settings.decrease", { label })}
           size="sm"
           variant="outline"
           disabled={value <= config.min}
@@ -222,7 +247,7 @@ function NumberStepper({
         <IconButton
           icon={<Plus size={18} color={theme.colors.text} />}
           onPress={() => onChange(clamp(value + config.step))}
-          accessibilityLabel={`Tăng ${label}`}
+          accessibilityLabel={t("settings.increase", { label })}
           size="sm"
           variant="outline"
           disabled={value >= config.max}
@@ -234,9 +259,15 @@ function NumberStepper({
 }
 
 const styles = StyleSheet.create({
-  content: { gap: spacing.lg },
   card: { gap: spacing.lg },
-  retry: { alignSelf: "center" },
+  local: { marginTop: spacing.lg },
+  center: { alignSelf: "center" },
+  langRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
   stepper: { gap: spacing.sm },
   stepperHeader: {
     flexDirection: "row",

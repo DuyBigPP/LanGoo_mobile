@@ -4,8 +4,8 @@
  *
  * Quy ước chuyển từ token cũ:
  * - spacing: xs=1(4px) sm=2(8px) md=3(12px) lg=4(16px) xl=5(20px) xxl=7(28px)
- * - radius:  sm=rounded-lg(8) md=rounded-xl(12) lg=rounded-2xl(16) xl=rounded-[20px] pill=rounded-full
- * - chữ:     text-xs=11 text-sm=13 text-base=15 text-lg=17 text-xl=20 text-2xl=28 text-hero=40
+ * - radius:  khớp web (--radius 12px): sm=8 md=10 lg=12 xl=16 2xl=16(mặc định) pill=rounded-full
+ * - chữ:     thang mặc định Tailwind (xs=12 sm=14 base=16 lg=18 xl=20 2xl=24) + text-hero=40
  */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -28,6 +28,7 @@ module.exports = {
         input: "rgb(var(--input) / <alpha-value>)",
         ring: "rgb(var(--ring) / <alpha-value>)",
         // token riêng của app
+        stamp: "rgb(var(--stamp) / <alpha-value>)",
         brand: "rgb(var(--brand) / <alpha-value>)",
         success: "rgb(var(--success) / <alpha-value>)",
         warning: "rgb(var(--warning) / <alpha-value>)",
@@ -37,15 +38,9 @@ module.exports = {
         "card-elevated": "rgb(var(--card-elevated) / <alpha-value>)",
         "primary-soft": "rgb(var(--primary-soft) / <alpha-value>)",
       },
-      fontSize: {
-        xs: ["11px", "16px"],
-        sm: ["13px", "18px"],
-        base: ["15px", "22px"],
-        lg: ["17px", "24px"],
-        xl: ["20px", "28px"],
-        "2xl": ["28px", "36px"],
-        hero: ["40px", "48px"],
-      },
+      borderRadius: { sm: "8px", md: "10px", lg: "12px", xl: "16px" },
+      fontSize: { hero: ["40px", "48px"] },
+      fontFamily: { sans: ["Be Vietnam Pro"] },
     },
   },
   plugins: [require("tailwindcss-animate")],

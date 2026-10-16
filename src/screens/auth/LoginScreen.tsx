@@ -1,8 +1,9 @@
 import * as React from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Eye, EyeOff } from "lucide-react-native";
+import { Eye, EyeOff, X } from "lucide-react-native";
 import { ApiError } from "@/api/client";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
 import {
   AppText,
   Button,
@@ -84,14 +85,32 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Screen scroll contentStyle={styles.content} testID="login-screen">
+      <Screen
+        right={
+          <View style={styles.headerRight}>
+            <LanguageToggle />
+            <IconButton
+              icon={<X size={20} color={theme.colors.textMuted} />}
+              onPress={() => navigation.canGoBack() && navigation.goBack()}
+              accessibilityLabel={t("common.close")}
+              testID="auth-close"
+            />
+          </View>
+        }
+        scroll
+        contentStyle={styles.content}
+        testID="login-screen"
+      >
         {/* Đầu màn: thương hiệu + dòng giới thiệu ngắn */}
         <View style={styles.brand}>
-          <AppText size="hero" weight="bold" color="primary" center>
-            Langoo
-          </AppText>
+          <Image
+            source={require("../../../assets/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityLabel="Langoo"
+          />
           <AppText variant="body" color="muted" center>
-            Học từ vựng tiếng Nhật
+            {t("auth.brandSubtitle")}
           </AppText>
         </View>
 
@@ -160,10 +179,14 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
             label={t("auth.registerNow")}
             variant="ghost"
             size="sm"
-            onPress={() => navigation.navigate("Register")}
+            onPress={() => navigation.replace("Register")}
             testID="login-register-link"
           />
         </View>
+
+        <AppText variant="caption" center>
+          © 2026 Langoo
+        </AppText>
       </Screen>
     </KeyboardAvoidingView>
   );
@@ -176,7 +199,9 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     paddingVertical: spacing.xxl,
   },
-  brand: { gap: spacing.xs },
+  brand: { gap: spacing.xs, alignItems: "center" },
+  logo: { width: 160, height: 60 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   card: { gap: spacing.md },
   footer: {
     flexDirection: "row",

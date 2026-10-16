@@ -29,9 +29,6 @@ import { spacing } from "@/theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EditItem">;
 
-const ITEM_NOT_FOUND = "Không tìm thấy từ này trong sổ tay.";
-const STATUS_LABEL = "Trạng thái học";
-
 /**
  * Sửa một từ trong sổ tay: nghĩa VI, ghi chú, trạng thái học.
  * Tìm item bằng cách quét các trang của useCollectionItemsQuery (tự nạp tiếp nếu ở trang sau).
@@ -164,7 +161,7 @@ export function EditItemScreen({ navigation, route }: Props) {
       <Screen title={t("study.editItem")} onBack={() => navigation.goBack()} testID="edit-item">
         <Card>
           <EmptyState
-            title={ITEM_NOT_FOUND}
+            title={t("study.itemNotFound")}
             actionLabel={t("study.backToStudy")}
             onAction={() => navigation.goBack()}
             testID="edit-item-not-found"
@@ -213,6 +210,7 @@ export function EditItemScreen({ navigation, route }: Props) {
             onChangeText={setMeaning}
             placeholder={t("dict.meaningPlaceholder")}
             error={error}
+            maxLength={200}
             testID="edit-item-meaning"
           />
           <Input
@@ -222,13 +220,14 @@ export function EditItemScreen({ navigation, route }: Props) {
             placeholder={t("study.notePlaceholder")}
             multiline
             numberOfLines={3}
+            maxLength={500}
             testID="edit-item-note"
           />
         </Card>
 
         {/* Trạng thái học */}
         <View style={styles.statusField}>
-          <AppText variant="label">{STATUS_LABEL}</AppText>
+          <AppText variant="label">{t("study.statusLabel")}</AppText>
           <SegmentedControl
             options={statusOptions}
             value={status}

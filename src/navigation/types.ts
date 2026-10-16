@@ -19,7 +19,6 @@ export type RootStackParamList = {
 
   SenseDetail: { lexemeId?: string; senseId?: string; surface?: string };
   KanjiDetail: { literal: string };
-  ReverseLookup: undefined;
 
   CollectionDetail: { collectionId: string; name: string };
   EditItem: { collectionId: string; itemId: string };
@@ -27,8 +26,6 @@ export type RootStackParamList = {
   QuizSession: { sessionId: string };
 
   ProfileForm: { profileId?: string };
-  Achievements: undefined;
-  Settings: undefined;
   Sources: undefined;
   Feedback: undefined;
 };

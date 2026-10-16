@@ -5,4 +5,6 @@
 declare module "@env" {
   /** URL backend Langoo API (không có dấu `/` ở cuối). */
   export const API_BASE_URL: string | undefined;
+  /** Web OAuth client ID cho Google Sign-In (chưa dùng — để sẵn cho bước OAuth sau). */
+  export const GOOGLE_WEB_CLIENT_ID: string | undefined;
 }

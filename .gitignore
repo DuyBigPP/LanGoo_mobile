@@ -30,3 +30,6 @@ coverage/
 .env
 .env.*.local
 *.log
+
+# Từ điển kuromoji chép từ node_modules lúc postinstall (scripts/copy-kuromoji-dict.js)
+android/app/src/main/assets/kuromoji-dict/

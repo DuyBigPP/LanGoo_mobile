@@ -1,0 +1,92 @@
+diff --git a/node_modules/@sglkc/kuromoji/src/dict/TokenInfoDictionary.js b/node_modules/@sglkc/kuromoji/src/dict/TokenInfoDictionary.js
+index 2fccee7..9edcf07 100644
+--- a/node_modules/@sglkc/kuromoji/src/dict/TokenInfoDictionary.js
++++ b/node_modules/@sglkc/kuromoji/src/dict/TokenInfoDictionary.js
+@@ -25,7 +25,8 @@ var ByteBuffer = require("../util/ByteBuffer");
+  */
+ function TokenInfoDictionary() {
+     this.dictionary = new ByteBuffer(10 * 1024 * 1024);
+-    this.target_map = {};  // trie_id (of surface form) -> token_info_id (of token)
++    // Map thay cho object thường: Hermes (React Native) giới hạn ~196k thuộc tính/object, từ điển có hàng trăm nghìn khoá
++    this.target_map = new Map();  // trie_id (of surface form) -> token_info_id (of token)
+     this.pos_buffer = new ByteBuffer(10 * 1024 * 1024);
+ }
+ 
+@@ -77,28 +78,27 @@ TokenInfoDictionary.prototype.put = function (left_id, right_id, word_cost, surf
+ };
+ 
+ TokenInfoDictionary.prototype.addMapping = function (source, target) {
+-    var mapping = this.target_map[source];
++    var mapping = this.target_map.get(source);
+     if (mapping == null) {
+         mapping = [];
+     }
+     mapping.push(target);
+ 
+-    this.target_map[source] = mapping;
++    this.target_map.set(source, mapping);
+ };
+ 
+ TokenInfoDictionary.prototype.targetMapToBuffer = function () {
+     var buffer = new ByteBuffer();
+-    var map_keys_size = Object.keys(this.target_map).length;
++    var map_keys_size = this.target_map.size;
+     buffer.putInt(map_keys_size);
+-    for (var key in this.target_map) {
+-        var values = this.target_map[key];  // Array
++    this.target_map.forEach(function (values, key) {  // values: Array
+         var map_values_size = values.length;
+         buffer.putInt(parseInt(key));
+         buffer.putInt(map_values_size);
+         for (var i = 0; i < values.length; i++) {
+             buffer.putInt(values[i]);
+         }
+-    }
++    });
+     return buffer.shrink();  // Shrink-ed Typed Array
+ };
+ 
+@@ -118,7 +118,7 @@ TokenInfoDictionary.prototype.loadPosVector = function (array_buffer) {
+ TokenInfoDictionary.prototype.loadTargetMap = function (array_buffer) {
+     var buffer = new ByteBuffer(array_buffer);
+     buffer.position = 0;
+-    this.target_map = {};
++    this.target_map = new Map();
+     buffer.readInt();  // map_keys_size
+     while (true) {
+         if (buffer.buffer.length < buffer.position + 1) {
+diff --git a/node_modules/@sglkc/kuromoji/src/dict/UnknownDictionary.js b/node_modules/@sglkc/kuromoji/src/dict/UnknownDictionary.js
+index 9814c77..fdbeecc 100644
+--- a/node_modules/@sglkc/kuromoji/src/dict/UnknownDictionary.js
++++ b/node_modules/@sglkc/kuromoji/src/dict/UnknownDictionary.js
+@@ -27,7 +27,7 @@ var ByteBuffer = require("../util/ByteBuffer");
+  */
+ function UnknownDictionary() {
+     this.dictionary = new ByteBuffer(10 * 1024 * 1024);
+-    this.target_map = {};  // class_id (of CharacterClass) -> token_info_id (of unknown class)
++    this.target_map = new Map();  // class_id (of CharacterClass) -> token_info_id (of unknown class)
+     this.pos_buffer = new ByteBuffer(10 * 1024 * 1024);
+     this.character_definition = null;
+ }
+diff --git a/node_modules/@sglkc/kuromoji/src/viterbi/ViterbiBuilder.js b/node_modules/@sglkc/kuromoji/src/viterbi/ViterbiBuilder.js
+index b5b8a5f..b917e7d 100644
+--- a/node_modules/@sglkc/kuromoji/src/viterbi/ViterbiBuilder.js
++++ b/node_modules/@sglkc/kuromoji/src/viterbi/ViterbiBuilder.js
+@@ -49,7 +49,7 @@ ViterbiBuilder.prototype.build = function (sentence_str) {
+             trie_id = vocabulary[n].v;
+             key = vocabulary[n].k;
+ 
+-            var token_info_ids = this.token_info_dictionary.target_map[trie_id];
++            var token_info_ids = this.token_info_dictionary.target_map.get(trie_id);
+             for (var i = 0; i < token_info_ids.length; i++) {
+                 var token_info_id = parseInt(token_info_ids[i]);
+ 
+@@ -80,7 +80,7 @@ ViterbiBuilder.prototype.build = function (sentence_str) {
+                 }
+             }
+ 
+-            var unk_ids = this.unknown_dictionary.target_map[head_char_class.class_id];
++            var unk_ids = this.unknown_dictionary.target_map.get(head_char_class.class_id);
+             for (var j = 0; j < unk_ids.length; j++) {
+                 var unk_id = parseInt(unk_ids[j]);
+ 

@@ -80,7 +80,7 @@ function KanjiInWordRow({ literal, onOpen }: { literal: string; onOpen: () => vo
           accessibilityRole="button"
           accessibilityLabel={t("dict.seeMore")}
           testID={`kanji-in-word-open-${literal}`}
-          style={({ pressed }) => [styles.openLink, pressed ? styles.pressed : null]}
+          className="active:opacity-70" style={styles.openLink}
         >
           <AppText variant="caption" color="primary" weight="medium">
             {t("dict.seeMore")}

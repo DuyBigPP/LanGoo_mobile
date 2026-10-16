@@ -11,6 +11,7 @@ import {
   streamChatMessage,
   updateChatSession,
 } from "@/api/chat";
+import { useAuth } from "@/contexts/AuthContext";
 import { translate } from "@/i18n";
 import type { ChatMessageDto, ChatMessageListDto } from "@/types/api";
 
@@ -22,9 +23,12 @@ export const chatKeys = {
 };
 
 export function useChatSessionsQuery() {
+  // Chat cần đăng nhập — guest có thể tới màn Chat qua nút "Hỏi AI" nên chặn ở đây
+  const authenticated = useAuth().status === "authenticated";
   return useInfiniteQuery({
     queryKey: chatKeys.sessions,
     queryFn: ({ pageParam }) => fetchChatSessions({ limit: 20, cursor: pageParam }),
+    enabled: authenticated,
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor,
     staleTime: 15_000,
@@ -50,9 +54,11 @@ export function useChatMessagesQuery(id: string | null) {
 }
 
 export function useChatUsageQuery() {
+  const authenticated = useAuth().status === "authenticated";
   return useQuery({
     queryKey: chatKeys.usage,
     queryFn: fetchChatUsage,
+    enabled: authenticated,
     staleTime: 30_000,
   });
 }

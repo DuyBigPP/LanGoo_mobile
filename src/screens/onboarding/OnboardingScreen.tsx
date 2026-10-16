@@ -28,17 +28,6 @@ import { spacing, useTheme } from "@/theme";
 
 type OnboardingScreenProps = NativeStackScreenProps<RootStackParamList, "Onboarding">;
 
-/** Thiếu khoá onboarding.namePlaceholder — dùng tạm chuỗi tiếng Việt. */
-const NAME_PLACEHOLDER = "Ví dụ: Học tiếng Nhật";
-/** Thiếu khoá onboarding.defaultName — tên mặc định cho hồ sơ Nhật-only. */
-const DEFAULT_NAME = "Nhật–Việt";
-/**
- * Khoá onboarding.studySetupHint nhắc "kéo thanh trượt" (RN không có Slider)
- * nên dùng câu thay thế cho phù hợp giao diện chọn mức + nút +/−.
- */
-const GOAL_HINT =
-  "Chọn nhanh một mức bên dưới hoặc dùng nút +/−. Chưa chắc thì bỏ qua — mặc định 5 thẻ/ngày.";
-
 const STEP_COUNT = 2;
 const GOAL_PRESETS = [5, 10, 20, 30];
 const GOAL_MIN = 5;
@@ -80,7 +69,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
     setFinishing(true);
     try {
       await createProfile.mutateAsync({
-        name: name.trim() || DEFAULT_NAME,
+        name: name.trim() || t("onboarding.defaultName"),
         primary_language_id: STUDY_LANGUAGE_ID,
         secondary_language_id: null,
         support_language_id: SUPPORT_LANGUAGE_ID,
@@ -127,14 +116,15 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
 
         <Card style={styles.card}>
           {step === 0 ? (
-            /* Bước 1: tên hồ sơ (để trống sẽ dùng tên mặc định Nhật–Việt) */
+            /* Bước 1: tên hồ sơ (để trống sẽ dùng tên mặc định Học tiếng Nhật) */
             <View style={styles.stepBody}>
               <AppText variant="label">{t("onboarding.profileName")}</AppText>
               <Input
                 value={name}
                 onChangeText={setName}
-                placeholder={NAME_PLACEHOLDER}
+                placeholder={t("onboarding.profileNamePlaceholder", { name: t("onboarding.defaultName") })}
                 autoCapitalize="words"
+                maxLength={80}
                 testID="onboarding-name"
               />
               <AppText variant="caption">{t("onboarding.profileNameHint")}</AppText>
@@ -143,7 +133,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
             /* Bước 2: mục tiêu thẻ/ngày — preset + nút tăng/giảm thay cho Slider */
             <View style={styles.stepBody}>
               <AppText variant="label">{t("onboarding.studySetupQuestion")}</AppText>
-              <AppText variant="caption">{GOAL_HINT}</AppText>
+              <AppText variant="caption">{t("onboarding.goalHint")}</AppText>
 
               <View style={styles.presets}>
                 {GOAL_PRESETS.map(preset => (
@@ -162,7 +152,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
                 <IconButton
                   icon={<Minus size={20} color={theme.colors.text} />}
                   onPress={() => adjustGoal(-GOAL_STEP)}
-                  accessibilityLabel="Giảm số thẻ mỗi ngày"
+                  accessibilityLabel={t("onboarding.goalDecrease")}
                   size="md"
                   variant="outline"
                   disabled={goal <= GOAL_MIN}
@@ -177,7 +167,7 @@ export function OnboardingScreen(_props: OnboardingScreenProps) {
                 <IconButton
                   icon={<Plus size={20} color={theme.colors.text} />}
                   onPress={() => adjustGoal(GOAL_STEP)}
-                  accessibilityLabel="Tăng số thẻ mỗi ngày"
+                  accessibilityLabel={t("onboarding.goalIncrease")}
                   size="md"
                   variant="outline"
                   disabled={goal >= GOAL_MAX}

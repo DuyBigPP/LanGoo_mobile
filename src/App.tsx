@@ -1,7 +1,7 @@
 import React from "react";
-import { StatusBar } from "react-native";
+import { StatusBar, View } from "react-native";
 import { NavigationContainer, DarkTheme, DefaultTheme } from "@react-navigation/native";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, onlineManager } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { colorScheme } from "nativewind";
 import { PortalHost } from "@rn-primitives/portal";
@@ -11,6 +11,10 @@ import { I18nProvider } from "@/i18n";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { ThemeProvider, useTheme } from "@/theme";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { OfflineBanner } from "@/components/common/OfflineBanner";
+import { ClipboardLookup } from "@/components/dictionary/ClipboardLookup";
+import { subscribeConnectivity } from "@/lib/netinfo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +25,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// React Query biết trạng thái mạng thật (netinfo chưa link → mặc định online)
+onlineManager.setEventListener((setOnline) => subscribeConnectivity(setOnline));
 
 /** Đồng bộ chế độ sáng/tối của app sang NativeWind (`dark:` hoạt động theo class). */
 function NativeWindThemeSync() {
@@ -52,7 +59,11 @@ function ThemedNavigation() {
         barStyle={theme.mode === "dark" ? "light-content" : "dark-content"}
         backgroundColor={theme.colors.background}
       />
-      <RootNavigator />
+      <View style={{ flex: 1 }}>
+        <OfflineBanner />
+        <RootNavigator />
+        <ClipboardLookup />
+      </View>
     </NavigationContainer>
   );
 }
@@ -63,6 +74,7 @@ export default function App() {
     <SafeAreaProvider>
       <I18nProvider>
         <ThemeProvider>
+          <ErrorBoundary>
           <QueryClientProvider client={queryClient}>
             <ToastProvider>
               <AuthProvider>
@@ -73,6 +85,7 @@ export default function App() {
               </AuthProvider>
             </ToastProvider>
           </QueryClientProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </I18nProvider>
     </SafeAreaProvider>

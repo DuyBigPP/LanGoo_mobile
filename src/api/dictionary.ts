@@ -20,6 +20,10 @@ export interface SearchDictionaryParams {
   cursor?: string | null;
 }
 
+/** Giới hạn độ dài `q` theo Swagger (search/suggestions ≤ 100, reverse ≤ 64) — vượt là 400 "Dữ liệu đầu vào không hợp lệ". */
+const MAX_QUERY_LENGTH = 100;
+const MAX_REVERSE_QUERY_LENGTH = 64;
+
 export async function searchDictionary({
   q,
   lang,
@@ -27,7 +31,7 @@ export async function searchDictionary({
   cursor,
 }: SearchDictionaryParams): Promise<SearchResultDto> {
   const { data } = await api.get<SearchResultDto>("/v1/dictionary/search", {
-    params: { q, lang: lang ?? undefined, limit, cursor: cursor ?? undefined },
+    params: { q: q.slice(0, MAX_QUERY_LENGTH), lang: lang ?? undefined, limit, cursor: cursor ?? undefined },
   });
   return data;
 }
@@ -42,7 +46,7 @@ export async function searchDictionaryAnon({
   lang,
   limit = 3,
 }: Pick<SearchDictionaryParams, "q" | "lang" | "limit">): Promise<SearchResultDto> {
-  const params = { q, lang: lang ?? undefined, limit };
+  const params = { q: q.slice(0, MAX_QUERY_LENGTH), lang: lang ?? undefined, limit };
   if (tokenStore.hasSession()) {
     const { data } = await api.get<SearchResultDto>("/v1/dictionary/search", { params });
     return data;
@@ -60,7 +64,7 @@ export async function fetchDictionarySuggestions({
   lang,
 }: Pick<SearchDictionaryParams, "q" | "lang">): Promise<SearchResultDto> {
   const { data } = await api.get<SearchResultDto>("/v1/dictionary/suggestions", {
-    params: { q, lang: lang ?? undefined },
+    params: { q: q.slice(0, MAX_QUERY_LENGTH), lang: lang ?? undefined },
   });
   return data;
 }
@@ -76,7 +80,7 @@ export async function fetchReverseLookup({
   to = "ja",
 }: ReverseLookupParams): Promise<ReverseLookupResultDto> {
   const { data } = await api.get<ReverseLookupResultDto>("/v1/dictionary/reverse", {
-    params: { q, to },
+    params: { q: q.slice(0, MAX_REVERSE_QUERY_LENGTH), to },
   });
   return data;
 }

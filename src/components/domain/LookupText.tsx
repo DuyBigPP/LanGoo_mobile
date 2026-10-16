@@ -22,7 +22,7 @@ export interface LookupTextProps {
  */
 export function LookupText({ text, onLookup, style }: LookupTextProps) {
   return (
-    <Text style={style}>
+    <Text style={style} selectable>
       {Array.from(text).map((char, index) => {
         // Khoảng trắng/xuống dòng: giữ nguyên, không gắn sự kiện (tra cũng vô nghĩa)
         if (/\s/.test(char)) {

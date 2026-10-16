@@ -71,11 +71,15 @@ cp .env.example .env   # rồi điền giá trị
 ```ini
 # .env (đã gitignore — chỉ commit .env.example)
 API_BASE_URL=https://langoo-api.pixpress.art
+GOOGLE_WEB_CLIENT_ID=            # chưa dùng (đăng nhập Google đang hoãn) — để trống được
 ```
+
+⚠️ Tên key **không có tiền tố `VITE_`** (đó là quy ước của web). Nếu chép `.env` từ web sang, đổi `VITE_API_BASE_URL` → `API_BASE_URL`, `VITE_GOOGLE_CLIENT_ID` → `GOOGLE_WEB_CLIENT_ID`; sai tên thì `API_BASE_URL` rỗng và app báo `[env] Thiếu API_BASE_URL`.
 
 ```ts
 // src/config/env.ts
 export const API_BASE_URL = ...;      // lấy từ @env, tự bỏ dấu "/" cuối
+export const GOOGLE_WEB_CLIENT_ID = ...; // rỗng = chưa bật Google
 export const STUDY_LANGUAGE_ID = 2;   // JA — nội dung học duy nhất
 export const SUPPORT_LANGUAGE_ID = 3; // VI — ngôn ngữ hiển thị nghĩa
 export const CHAT_LANGUAGE_ID = 2;    // chat AI tiếng Nhật
@@ -84,6 +88,8 @@ export const CHAT_LANGUAGE_ID = 2;    // chat AI tiếng Nhật
 ⚠️ **Đổi giá trị trong `.env` phải khởi động lại Metro kèm `--reset-cache`** (giá trị được nhúng vào bundle lúc build).
 
 ## 7. Lưu ý khi build thật
+
+- **Cần rebuild native** (gradle) sau khi thêm: font Be Vietnam Pro (`res/font/` + `MainApplication.kt`), `@react-native-community/netinfo`, `@react-native-clipboard/clipboard`, `react-native-fs` và từ điển kuromoji (`npm install` tự chép vào `android/app/src/main/assets/kuromoji-dict` nhờ `postinstall`; APK tăng ~17MB). Chỉ reload JS thì app vẫn chạy nhưng dùng font hệ thống và banner offline bị ẩn (netinfo nạp lazy nên không crash).
 
 - **TTS**: nút loa **luôn hiển thị**; máy chưa cài engine (Google Text-to-Speech) thì bấm sẽ hiện toast hướng dẫn — `lib/tts.ts` kiểm tra engine thật bằng `Tts.getInitStatus()` (nhớ kết quả "có engine"; máy thật có engine thì đọc bình thường).
 - **Android cleartext**: không cần — backend là HTTPS.

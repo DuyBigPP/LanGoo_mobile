@@ -48,7 +48,7 @@ export function Badge({ children, tone = "default", style, testID }: BadgeProps)
   return (
     <ReusablesBadge
       variant="outline"
-      className={cn("self-start rounded-lg border-[1.5px] px-2 py-[1px]", TONE_BORDER[tone])}
+      className={cn("self-start rounded-sm border-[1.5px] px-2 py-[1px]", TONE_BORDER[tone])}
       style={style}
       testID={testID}
     >

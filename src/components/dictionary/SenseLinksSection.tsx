@@ -33,7 +33,7 @@ export function SenseLinksSection({ links, onSelect }: SenseLinksSectionProps) {
               accessibilityRole="button"
               accessibilityLabel={link.lemma}
               testID={`sense-link-${link.sense_id}`}
-              style={({ pressed }) => [pressed ? styles.pressed : null]}
+              className="active:opacity-70"
             >
               <Chip>
                 {language ? <Flag code={language.flagCode} size="sm" /> : null}

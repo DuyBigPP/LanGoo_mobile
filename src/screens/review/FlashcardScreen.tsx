@@ -1,4 +1,5 @@
 import * as React from "react";
+import { uuidv7 } from "@/lib/uuid";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
 import {
   useInfiniteQuery,
@@ -24,21 +25,12 @@ type Props = NativeStackScreenProps<RootStackParamList, "Flashcard">;
 const DEFAULT_LIMIT = 20;
 const MAX_ELAPSED_MS = 3_600_000;
 
-/** Thiếu khoá i18n — dùng tạm chuỗi tiếng Việt (đã ghi trong báo cáo). */
-const RATED_PREFIX = "Thẻ vừa đánh giá: ";
-const RESTART_LABEL = "Học tiếp";
-
 const RATING_OPTIONS: { rating: 1 | 2 | 3 | 4; labelKey: string }[] = [
   { rating: 1, labelKey: "review.ratingAgain" },
   { rating: 2, labelKey: "review.ratingHard" },
   { rating: 3, labelKey: "review.ratingGood" },
   { rating: 4, labelKey: "review.ratingEasy" },
 ];
-
-/** client_review_id chỉ cần duy nhất trong phiên (RN không có crypto.randomUUID). */
-function makeClientReviewId(): string {
-  return `fc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
 
 function toSpeakLang(code: string): SpeakLang {
   if (code === "vi") return "vi";
@@ -171,7 +163,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
           rating,
           elapsed_ms: Math.min(Date.now() - shownAt.current, MAX_ELAPSED_MS),
           mode: "flashcard",
-          client_review_id: makeClientReviewId(),
+          client_review_id: uuidv7(),
           collection_id: collectionId,
         },
         {
@@ -184,7 +176,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
                 : days === 1
                   ? t("review.reviewInOneDay")
                   : t("review.reviewInDays", { days });
-            setLastFeedback(`${RATED_PREFIX}${when}`);
+            setLastFeedback(t("review.lastRated", { when }));
             // Thẻ đã chấm rời snapshot -> thẻ kế tiếp đã nằm ngay tại index hiện tại
             removeCardFromCache(card.srs_id);
             setFlipped(false);
@@ -276,7 +268,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
             </AppText>
             <View style={styles.doneActions}>
               <Button
-                label={RESTART_LABEL}
+                label={t("review.studyMore")}
                 variant="outline"
                 onPress={restart}
                 testID="flash-restart"

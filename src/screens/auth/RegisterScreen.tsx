@@ -1,8 +1,9 @@
 import * as React from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Eye, EyeOff } from "lucide-react-native";
+import { Eye, EyeOff, X } from "lucide-react-native";
 import { ApiError } from "@/api/client";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
 import {
   AppText,
   Button,
@@ -102,16 +103,29 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
     >
       <Screen
         title={t("auth.registerTitle")}
-        onBack={() => navigation.goBack()}
-        scroll
+        right={
+          <View style={styles.headerRight}>
+            <LanguageToggle />
+            <IconButton
+              icon={<X size={20} color={theme.colors.textMuted} />}
+              onPress={() => navigation.canGoBack() && navigation.goBack()}
+              accessibilityLabel={t("common.close")}
+              testID="auth-close"
+            />
+          </View>
+        }
+                scroll
         contentStyle={styles.content}
         testID="register-screen"
       >
         {/* Đầu màn: thương hiệu + lời mời đăng ký */}
         <View style={styles.brand}>
-          <AppText size="hero" weight="bold" color="primary" center>
-            Langoo
-          </AppText>
+          <Image
+            source={require("../../../assets/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityLabel="Langoo"
+          />
           <AppText variant="body" color="muted" center>
             {t("auth.registerSubtitle")}
           </AppText>
@@ -180,6 +194,8 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
             }
           />
 
+          <AppText variant="caption">{t("auth.passwordHint")}</AppText>
+
           <Input
             ref={confirmRef}
             label={t("auth.confirmPassword")}
@@ -210,10 +226,14 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
             label={t("auth.loginNow")}
             variant="ghost"
             size="sm"
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.replace("Login")}
             testID="register-login-link"
           />
         </View>
+
+        <AppText variant="caption" center>
+          © 2026 Langoo
+        </AppText>
       </Screen>
     </KeyboardAvoidingView>
   );
@@ -222,7 +242,9 @@ export function RegisterScreen({ navigation }: RegisterScreenProps) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { gap: spacing.lg, paddingVertical: spacing.xl },
-  brand: { gap: spacing.xs },
+  brand: { gap: spacing.xs, alignItems: "center" },
+  logo: { width: 160, height: 60 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   card: { gap: spacing.md },
   footer: {
     flexDirection: "row",

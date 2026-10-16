@@ -1,8 +1,9 @@
 import React from "react";
 import { createBottomTabNavigator, useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { BookMarked, BookOpen, Bot, Languages, UserRound } from "lucide-react-native";
 import { useToast } from "@/components/ui";
+import { useAuth } from "@/contexts/AuthContext";
 import { useScopeReset } from "@/hooks/use-profile";
 import { useT } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -57,12 +58,41 @@ function TabScreenLayout({ children }: { children: React.ReactNode }) {
 export function MainTabs() {
   const t = useT();
   const theme = useTheme();
+  const { status } = useAuth();
+  // MainTabs là một màn của stack gốc -> navigation này mở được modal Login
+  const navigation = useNavigation();
 
-  // Đổi hồ sơ hoạt động -> bỏ cache theo scope cũ
+  // Đổi hồ sơ hoạt động -> bỏ cache theo scope cũ (guest: không có hồ sơ nên không làm gì)
   useScopeReset();
+
+  // Tab cần tài khoản (Sổ tay, Chat): guest bấm -> mở modal đăng nhập thay vì vào tab
+  const requireAuthListeners = {
+    tabPress: (event: { preventDefault: () => void }) => {
+      if (status === "authenticated") return;
+      event.preventDefault();
+      navigation.navigate("Login");
+    },
+  };
+
+  // Đăng xuất / hết phiên khi đang ở tab cần tài khoản: state điều hướng được giữ lại
+  // khi stack dựng lại -> đẩy guest về Từ điển thay vì kẹt ở màn không có dữ liệu
+  const kickGuestFromGatedTab = ({
+    navigation: tabNavigation,
+    route,
+  }: {
+    navigation: { navigate: (name: "Dictionary") => void };
+    route: { name: string };
+  }) => ({
+    focus: () => {
+      if (status !== "authenticated" && (route.name === "Collections" || route.name === "Chat")) {
+        tabNavigation.navigate("Dictionary");
+      }
+    },
+  });
 
   return (
     <Tab.Navigator
+      screenListeners={kickGuestFromGatedTab}
       screenOptions={{
         headerShown: false,
         // Ẩn tab bar khi bàn phím mở (giống hành vi bản web)
@@ -74,7 +104,9 @@ export function MainTabs() {
           borderTopColor: theme.colors.border,
         },
         tabBarLabelStyle: {
-          fontSize: theme.fontSize.xs,
+          fontFamily: "Be Vietnam Pro",
+          // Web MobileTabBar: nhãn 10px / medium
+          fontSize: 10,
           fontWeight: theme.fontWeight.medium,
         },
       }}
@@ -86,22 +118,24 @@ export function MainTabs() {
         options={{ title: t("nav.dictionary"), tabBarIcon: renderDictionaryIcon }}
       />
       <Tab.Screen
+        name="Collections"
+        component={CollectionsScreen}
+        layout={TabScreenLayout}
+        options={{ title: t("nav.collections"), tabBarIcon: renderCollectionsIcon }}
+        listeners={requireAuthListeners}
+      />
+      <Tab.Screen
         name="Translate"
         component={TranslateScreen}
         layout={TabScreenLayout}
         options={{ title: t("nav.translate"), tabBarIcon: renderTranslateIcon }}
       />
       <Tab.Screen
-        name="Collections"
-        component={CollectionsScreen}
-        layout={TabScreenLayout}
-        options={{ title: t("nav.collections"), tabBarIcon: renderCollectionsIcon }}
-      />
-      <Tab.Screen
         name="Chat"
         component={ChatScreen}
         layout={TabScreenLayout}
         options={{ title: t("nav.chat"), tabBarIcon: renderChatIcon }}
+        listeners={requireAuthListeners}
       />
       <Tab.Screen
         name="Profile"

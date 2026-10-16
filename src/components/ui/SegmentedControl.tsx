@@ -1,6 +1,6 @@
-import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
-import { cn } from "@/lib/utils";
-import { AppText } from "./Text";
+import { type StyleProp, type ViewStyle } from "react-native";
+import { Tabs, TabsList, TabsTrigger } from "@/components/reusables/tabs";
+import { Text } from "@/components/reusables/text";
 
 export interface SegmentedOption {
   value: string;
@@ -15,45 +15,28 @@ export interface SegmentedControlProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Tab phân đoạn — chọn 1 trong n, không cần thư viện native. */
-export function SegmentedControl({
-  options,
-  value,
-  onChange,
-  testID,
-  style,
-}: SegmentedControlProps) {
+/**
+ * Tab phân đoạn — chọn 1 trong n. Lõi là Tabs của React Native Reusables (giống Tabs shadcn bên web);
+ * API giữ nguyên. Nhãn 1 dòng, tự co nhẹ nếu quá chật.
+ */
+export function SegmentedControl({ options, value, onChange, testID, style }: SegmentedControlProps) {
   return (
-    <View
-      className="flex-row items-center gap-0.5 rounded-xl border border-border bg-background p-[3px]"
-      style={style}
-      testID={testID}
-    >
-      {options.map(option => {
-        const selected = option.value === value;
-        return (
-          <Pressable
+    <Tabs value={value} onValueChange={onChange} className="gap-0">
+      <TabsList className="mr-0 h-auto w-full" style={style} testID={testID}>
+        {options.map(option => (
+          <TabsTrigger
             key={option.value}
-            onPress={() => onChange(option.value)}
-            accessibilityRole="tab"
+            value={option.value}
             accessibilityLabel={option.label}
-            accessibilityState={{ selected }}
             testID={testID ? `${testID}-${option.value}` : undefined}
-            className={cn(
-              "min-h-10 flex-1 items-center justify-center rounded-lg border border-transparent px-2",
-              selected && "border-border bg-card",
-            )}
+            className="h-auto min-h-10 flex-1"
           >
-            <AppText
-              size="sm"
-              weight={selected ? "semibold" : "medium"}
-              color={selected ? "primary" : "muted"}
-            >
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
               {option.label}
-            </AppText>
-          </Pressable>
-        );
-      })}
-    </View>
+            </Text>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }

@@ -47,14 +47,11 @@ export function TagPicker({ selectedIds, onChange }: TagPickerProps) {
             accessibilityRole="button"
             accessibilityState={{ selected }}
             testID="tag-option"
-            style={({ pressed }) => [
-              styles.option,
+            className="active:opacity-85" style={[styles.option,
               {
                 borderColor: selected ? theme.colors.primary : theme.colors.border,
                 backgroundColor: selected ? theme.colors.primary : theme.colors.card,
-              },
-              pressed ? styles.pressed : null,
-            ]}
+              }]}
           >
             <AppText
               size="sm"

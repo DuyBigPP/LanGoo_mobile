@@ -3,53 +3,55 @@
 ## 1. Cây điều hướng
 
 ```
-RootNavigator (native-stack, headerShown: false)
+RootNavigator (native-stack, headerShown: false) — MỘT navigator, key theo trạng thái phiên
 │
-├─ [guest]
-│   ├─ Login            → LoginScreen
-│   └─ Register         → RegisterScreen
+├─ [đã đăng nhập nhưng chưa có hồ sơ]  → chỉ Onboarding (OnboardingScreen)
+├─ [đã đăng nhập, tải hồ sơ lỗi]       → ProfileLoadError (Thử lại / Đăng xuất)
 │
-├─ [đã đăng nhập nhưng chưa có hồ sơ]
-│   └─ Onboarding       → OnboardingScreen
-│
-└─ [đã đăng nhập + có hồ sơ]
-    ├─ Tabs (bottom-tabs) — MainTabs
-    │   ├─ Dictionary   → DictionaryScreen     (icon BookOpen)
-    │   ├─ Translate    → TranslateScreen      (icon Languages)
-    │   ├─ Collections  → CollectionsScreen    (icon BookMarked)
-    │   ├─ Chat         → ChatScreen           (icon Bot)
-    │   └─ Profile      → ProfileScreen        (icon UserRound)
+└─ [guest HOẶC đã đăng nhập + có hồ sơ]
+    ├─ Tabs (bottom-tabs) — MainTabs, thứ tự như web
+    │   ├─ Dictionary   → DictionaryScreen     (BookOpen)    công khai
+    │   ├─ Collections  → CollectionsScreen    (BookMarked)  cần đăng nhập*
+    │   ├─ Translate    → TranslateScreen      (Languages)   công khai
+    │   ├─ Chat         → ChatScreen           (Bot)         cần đăng nhập*
+    │   └─ Profile      → ProfileScreen        (UserRound)   guest: thẻ đăng nhập + giao diện + ngôn ngữ
     │
-    └─ Các màn đẩy lên (native-stack):
-        ├─ SenseDetail      { lexemeId?, senseId?, surface? }   (modal)
-        ├─ KanjiDetail      { literal }
-        ├─ ReverseLookup
-        ├─ CollectionDetail { collectionId, name }
-        ├─ EditItem         { collectionId, itemId }
-        ├─ Flashcard        { collectionId?, limit? }           (modal)
-        ├─ QuizSession      { sessionId }
-        ├─ ProfileForm      { profileId? }                      (modal)
-        ├─ Settings
-        ├─ Sources
-        └─ Feedback
+    ├─ Màn công khai (luôn đăng ký):
+    │   ├─ SenseDetail      { lexemeId?, senseId?, surface? }   (modal)
+    │   ├─ KanjiDetail      { literal }
+    │   └─ Sources
+    │
+    ├─ Chỉ khi đã đăng nhập:
+    │   ├─ CollectionDetail { collectionId, name }
+    │   ├─ EditItem         { collectionId, itemId }
+    │   ├─ Flashcard        { collectionId?, limit? }           (modal)
+    │   ├─ QuizSession      { sessionId }
+    │   ├─ ProfileForm      { profileId? }                      (modal)
+    │   └─ Feedback
+    │
+    └─ Chỉ khi guest (nhóm modal):  Login → LoginScreen · Register → RegisterScreen
 ```
+
+* Guest bấm tab Sổ tay/Chat → `tabPress` bị chặn và mở modal Login. Các hành động cần tài khoản
+(thêm vào sổ tay, báo lỗi nghĩa, "Hỏi AI", góp ý) đi qua `useRequireAuth()` (`AuthContext`).
+Đăng nhập xong React Navigation tự gỡ nhóm Login/Register. Đăng xuất → stack dựng lại nhưng state tab được giữ (đang ở Hồ sơ thì ở lại Hồ sơ dạng khách); nếu đang ở tab Sổ tay/Chat thì `MainTabs` (`screenListeners.focus`) đẩy về Từ điển.
 
 - File: `src/navigation/RootNavigator.tsx` (chuyển nhánh theo `AuthContext` + danh sách hồ sơ), `src/navigation/MainTabs.tsx`.
 - Kiểu tham số: `src/navigation/types.ts` (`RootStackParamList`, `MainTabParamList`).
-- Tab Từ điển nhận `params: { q?: string }` để mở sẵn từ khoá (từ màn chữ Hán / tra ngược).
-- `MainTabs` gọi `useScopeReset()` — đổi hồ sơ hoạt động là dọn cache theo scope ngay.
+- Tab Từ điển nhận `params: { q?: string }` để mở sẵn từ khoá (từ màn chữ Hán). Tra ngược Việt → Nhật nằm **inline** trong Từ điển (segmented auto/ja/vi), không còn màn riêng.
+- `MainTabs` gọi `useScopeReset()` — đổi hồ sơ hoạt động là dọn cache theo scope ngay (guest: không làm gì).
+- Query cần token (hồ sơ, cài đặt, sổ tay, SRS, chat, lịch sử tra…) đều `enabled` theo `status === "authenticated"` — guest không gọi API cần đăng nhập.
 
-## 2. Danh sách màn hình (20)
+## 2. Danh sách màn hình (17)
 
 | Nhóm | File | Vai trò chính |
 | --- | --- | --- |
-| auth | `screens/auth/LoginScreen.tsx` | Đăng nhập, validate, liên kết Đăng ký |
+| auth | `screens/auth/LoginScreen.tsx` | Đăng nhập (modal cho guest): logo, đổi VI/EN, nút đóng |
 | auth | `screens/auth/RegisterScreen.tsx` | Đăng ký (tên hiển thị tuỳ chọn) |
 | onboarding | `screens/onboarding/OnboardingScreen.tsx` | 2 bước: tên hồ sơ → mục tiêu/ngày (JA cố định) |
-| dictionary | `screens/dictionary/DictionaryScreen.tsx` | Tra từ: gợi ý, kết quả phân trang, deinflect, dịch fallback, lịch sử |
+| dictionary | `screens/dictionary/DictionaryScreen.tsx` | Tra từ (ja) + tra ngược Việt → Nhật inline (`components/dictionary/ReverseResults.tsx`): gợi ý, tải thêm, deinflect, dịch fallback, lịch sử |
 | dictionary | `screens/dictionary/SenseDetailScreen.tsx` | Chi tiết nghĩa: nhóm nghĩa, ví dụ, dạng từ, TTS, thêm vào sổ |
 | dictionary | `screens/dictionary/KanjiDetailScreen.tsx` | Chữ Hán: âm đọc, nghĩa, bộ thủ, cây thành phần |
-| dictionary | `screens/dictionary/ReverseLookupScreen.tsx` | Tra ngược Việt → Nhật |
 | translate | `screens/translate/TranslateScreen.tsx` | Dịch VI/EN/JA (engine client-side), sao chép + TTS |
 | collections | `screens/collections/CollectionsScreen.tsx` | Tổng quan SRS + danh sách sổ tay (phân trang) |
 | collections | `screens/collections/CollectionDetailScreen.tsx` | Chi tiết sổ: sắp xếp, danh sách mục, sửa/xoá |
@@ -57,9 +59,8 @@ RootNavigator (native-stack, headerShown: false)
 | review | `screens/review/FlashcardScreen.tsx` | Flashcard SRS: lật thẻ, chấm 4 mức, hàng đợi cursor |
 | review | `screens/review/QuizSessionScreen.tsx` | Chơi quiz AI: câu hỏi, chấm, kết quả, câu sai |
 | chat | `screens/chat/ChatScreen.tsx` | Chat streaming, phiên, ảnh, markdown, quota |
-| profile | `screens/profile/ProfileScreen.tsx` | Tài khoản, hồ sơ, thống kê, liên kết, giao diện |
+| profile | `screens/profile/ProfileScreen.tsx` | Guest: đăng nhập/đăng ký + giao diện + ngôn ngữ. Đã đăng nhập: thống kê, cài đặt học (`components/profile/SettingsSection.tsx`, gồm múi giờ), mục Khác (góp ý/nguồn/JLPT), thẻ tài khoản + đăng xuất. Không hiện XP/thành tựu (như web) |
 | profile | `screens/profile/ProfileFormScreen.tsx` | Tạo/sửa hồ sơ (JA cố định) |
-| profile | `screens/profile/SettingsScreen.tsx` | Mục tiêu ngày, thẻ mới/lượt ôn, giao diện |
 | profile | `screens/profile/SourcesScreen.tsx` | Nguồn dữ liệu từ điển + credit |
 | profile | `screens/profile/FeedbackScreen.tsx` | Gửi góp ý (4 loại, ≤ 3 ảnh) + lịch sử |
 | (component) | `components/dictionary/AddToCollectionSheet.tsx` | Bottom sheet chọn bộ + nghĩa + ghi chú |
@@ -81,18 +82,19 @@ RootNavigator (native-stack, headerShown: false)
 | Khác | `SectionHeader`, `Avatar` | Tiêu đề mục có count; avatar chữ cái đầu |
 
 **Domain components**: `components/domain/SpeakButton.tsx` (TTS ja/vi), `WordCell.tsx` (từ + cách đọc + cờ).
-**Common**: `components/common/FullScreenLoader.tsx` (màn chờ boot/kiểm tra phiên).
+**Common**: `FullScreenLoader.tsx` (màn chờ boot; sau 4s hiện gợi ý máy chủ đang khởi động), `ErrorBoundary.tsx` (bắt lỗi render toàn app), `OfflineBanner.tsx` (banner mất mạng, dùng `lib/netinfo.ts`), `LanguageToggle.tsx` (chọn VI/EN).
 
 ## 4. Theme — `src/theme/`
 
 | File | Nội dung |
 | --- | --- |
-| `palette.ts` | Bảng màu light/dark (primary chàm `#1C3A8C`, tinh thần bản web) |
-| `tokens.ts` | `spacing`, `radius`, `fontSize`, `fontWeight`, `HIT_SLOP` |
+| `palette.ts` | Bảng màu light/dark — quy đổi từ token oklch của web (`index.css`): primary `#23418F`, brand `#fc3603`, stamp `#D33E25` (khớp `global.css`) |
+| `tokens.ts` | `spacing`, `radius` (sm 8 / md 10 / lg 12 / xl 16 như web), `fontSize` (xs 12 … xxl 24, hero 40), `fontWeight`, `HIT_SLOP` |
 | `ThemeContext.tsx` | `ThemeProvider` (system/light/dark), `useTheme()`, `useThemeControls()` |
 
+Font mặc định **Be Vietnam Pro** (TTF trong `android/app/src/main/res/font/`, đăng ký ở `MainApplication.kt`; chữ Nhật tự fallback font hệ thống).
 Quy ước: mọi component lấy màu/khoảng cách từ `useTheme()` + token, không hard-code màu.
-Chế độ giao diện chọn trong `SettingsScreen`/`ProfileScreen`, lưu bền qua AsyncStorage.
+Chế độ giao diện chọn trong `ProfileScreen`, lưu bền qua AsyncStorage.
 
 ## 5. i18n — `src/i18n/`
 

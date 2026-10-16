@@ -180,7 +180,8 @@ export interface DueItemDto {
   face_id: string;
   item_id: string;
   collection_id: string;
-  direction: string;
+  /** Swagger: enum recognize | recall */
+  direction: "recognize" | "recall";
   state: "new" | "learning" | "review" | "relearning" | string;
   language: { id: number; code: string; name_vi: string };
   instruction: string;
@@ -205,10 +206,11 @@ export interface DueResultDto {
 
 export interface CreateReviewDto {
   face_id: string;
-  direction: string;
+  direction: "recognize" | "recall";
   rating: 1 | 2 | 3 | 4;
   elapsed_ms: number;
-  mode: "flashcard" | "quiz";
+  mode: "flashcard" | "multiple_choice" | "matching" | "typing" | "listening";
+  /** UUID (Swagger `format: uuid`) — dùng `uuidv7()` từ `@/lib/uuid` */
   client_review_id: string;
   collection_id?: string;
 }

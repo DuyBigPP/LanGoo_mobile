@@ -12,6 +12,7 @@ import {
   searchDictionary,
   searchDictionaryAnon,
 } from "@/api/dictionary";
+import { useAuth } from "@/contexts/AuthContext";
 import { detectLang, type QueryLang } from "@/lib/lang";
 import { deinflectJapanese } from "@/lib/jp-deinflect";
 import type { SearchHitDto } from "@/types/dictionary";
@@ -208,10 +209,12 @@ export function useSensesMany(senseIds: string[]) {
 }
 
 export function useSearchHistory(enabled: boolean) {
+  // Lịch sử tra cần đăng nhập — guest không gọi
+  const authenticated = useAuth().status === "authenticated";
   return useQuery({
     queryKey: dictionaryKeys.history,
     queryFn: fetchSearchHistory,
-    enabled,
+    enabled: enabled && authenticated,
     staleTime: 0,
     refetchOnMount: "always",
   });

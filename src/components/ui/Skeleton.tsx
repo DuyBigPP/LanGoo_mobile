@@ -25,7 +25,7 @@ export function Skeleton({
   return (
     <ReusablesSkeleton
       testID={testID}
-      className={cn("bg-border", cornerRadius === undefined && "rounded-lg")}
+      className={cn("bg-border", cornerRadius === undefined && "rounded-sm")}
       style={[
         { width, height },
         cornerRadius !== undefined ? { borderRadius: cornerRadius } : null,

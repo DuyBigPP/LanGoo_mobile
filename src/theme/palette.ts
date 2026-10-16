@@ -1,4 +1,4 @@
-/** Bảng màu light/dark (lấy tinh thần từ web: primary chàm #1C3A8C). */
+/** Bảng màu light/dark (chuyển từ oklch của web index.css sang sRGB). */
 
 export interface Palette {
   background: string;
@@ -10,6 +10,8 @@ export interface Palette {
   onPrimary: string;
   /** Đỏ logo — dùng cho highlight từ đang tra trong câu ví dụ */
   brand: string;
+  /** Đỏ cam dấu kiểm duyệt (token `stamp` của web) */
+  stamp: string;
   text: string;
   textMuted: string;
   textFaint: string;
@@ -22,18 +24,19 @@ export interface Palette {
 }
 
 export const lightPalette: Palette = {
-  background: "#F5F7FB",
+  background: "#F1F5FA",
   card: "#FFFFFF",
   cardElevated: "#FFFFFF",
-  border: "#E2E8F0",
-  primary: "#1C3A8C",
-  primarySoft: "#E4EAF9",
-  onPrimary: "#FFFFFF",
+  border: "#DBE4F1",
+  primary: "#23418F",
+  primarySoft: "#E3ECF9",
+  onPrimary: "#F8FAFD",
   brand: "#fc3603",
-  text: "#0F172A",
-  textMuted: "#64748B",
+  stamp: "#D33E25",
+  text: "#192645",
+  textMuted: "#62718B",
   textFaint: "#94A3B8",
-  danger: "#DC2626",
+  danger: "#E74328",
   dangerSoft: "#FEE2E2",
   success: "#16A34A",
   warning: "#D97706",
@@ -42,18 +45,19 @@ export const lightPalette: Palette = {
 };
 
 export const darkPalette: Palette = {
-  background: "#0F1117",
-  card: "#151820",
-  cardElevated: "#1B1F2A",
-  border: "#2A3040",
-  primary: "#8FA8F0",
-  primarySoft: "#232B45",
-  onPrimary: "#0F1117",
+  background: "#141921",
+  card: "#1F252F",
+  cardElevated: "#1F252F",
+  border: "#363D4B",
+  primary: "#A1BAF2",
+  primarySoft: "#272E3A",
+  onPrimary: "#101725",
   brand: "#fc3603",
-  text: "#E7EAF3",
-  textMuted: "#9AA4B8",
+  stamp: "#FB836D",
+  text: "#EBF1F8",
+  textMuted: "#B1BAC7",
   textFaint: "#6B7488",
-  danger: "#F87171",
+  danger: "#F56F57",
   dangerSoft: "#3A1D1D",
   success: "#4ADE80",
   warning: "#FBBF24",

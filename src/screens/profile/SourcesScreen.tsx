@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Clipboard, Linking, StyleSheet, View } from "react-native";
+import { Linking, StyleSheet, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Check, Copy, ExternalLink } from "lucide-react-native";
 import {
@@ -15,6 +15,7 @@ import { useSourcesQuery } from "@/hooks/use-sources";
 import { useT } from "@/i18n";
 import { formatNumber } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
+import { copyText } from "@/lib/clipboard";
 import { spacing, useTheme } from "@/theme";
 import type { SourceDto, SourceUsageDto } from "@/types/api";
 
@@ -31,8 +32,6 @@ const USAGE_FIELDS: Array<{ key: keyof SourceUsageDto; labelKey: string }> = [
   { key: "examples", labelKey: "sources.examples" },
 ];
 
-/** Thiếu khoá common.copied — dùng tạm chuỗi tiếng Việt (đã ghi trong báo cáo). */
-const COPIED_LABEL = "Đã sao chép";
 const COPIED_RESET_MS = 1500;
 
 /** Màn Nguồn dữ liệu: license/attribution/usage từng nguồn + link và credit. */
@@ -109,7 +108,7 @@ function SourceCard({ source }: { source: SourceDto }) {
     .map(entry => `${entry.label} ${formatNumber(entry.count)}`);
 
   const handleCopy = () => {
-    Clipboard.setString(source.credit_line);
+    copyText(source.credit_line);
     setCopied(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setCopied(false), COPIED_RESET_MS);
@@ -150,7 +149,7 @@ function SourceCard({ source }: { source: SourceDto }) {
           />
         ) : null}
         <Button
-          label={copied ? COPIED_LABEL : t("sources.copyCredit")}
+          label={copied ? t("dict.lookupCopied") : t("sources.copyCredit")}
           variant="ghost"
           size="sm"
           icon={

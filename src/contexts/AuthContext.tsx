@@ -1,12 +1,12 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import * as authApi from "@/api/auth";
 import { revokeSession } from "@/api/client";
 import { APP_VERSION } from "@/config/env";
 import { sessionCache } from "@/lib/session-cache";
 import { subscribeUnauthorized, tokenStore } from "@/lib/token-store";
-import { queryKeys } from "@/hooks/use-profile";
 import type { LoginDto, RegisterDto, UserDto } from "@/types/api";
 
 export type AuthStatus = "loading" | "authenticated" | "guest";
@@ -34,6 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<UserDto | null>(null);
+  // Giữ status mới nhất cho handler 401 (đăng ký 1 lần, không đọc được state cũ)
+  const statusRef = useRef(status);
+  statusRef.current = status;
 
   useEffect(() => {
     let cancelled = false;
@@ -80,7 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () =>
       subscribeUnauthorized(() => {
         void sessionCache.clear();
-        queryClient.removeQueries({ queryKey: queryKeys.profiles });
+        // Chỉ xoá cache khi đang là phiên đăng nhập — guest dính 401 không được làm mất cache từ điển công khai
+        if (statusRef.current === "authenticated") queryClient.clear();
         setUser(null);
         setStatus("guest");
       }),
@@ -106,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Xoá phiên phía client trước (luôn thành công), thu hồi máy chủ là best-effort
     tokenStore.clear();
     void sessionCache.clear();
-    queryClient.removeQueries({ queryKey: queryKeys.profiles });
+    queryClient.clear();
     setUser(null);
     setStatus("guest");
     void revokeSession(access);
@@ -124,4 +128,20 @@ export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth phải dùng trong <AuthProvider>");
   return context;
+}
+
+/**
+ * Chặn hành động cần đăng nhập: guest -> mở modal Login, đã đăng nhập -> chạy `fn`.
+ * Guest không bao giờ chạm tới API cần token (tránh 401).
+ */
+export function useRequireAuth(): (fn: () => void) => void {
+  const { status } = useAuth();
+  const navigation = useNavigation();
+  return useCallback(
+    (fn: () => void) => {
+      if (status === "authenticated") fn();
+      else navigation.navigate("Login");
+    },
+    [status, navigation],
+  );
 }

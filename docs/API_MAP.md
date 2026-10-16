@@ -47,7 +47,7 @@ Base URL khai báo tại `src/config/env.ts`. Mọi request đi qua `src/api/cli
 | GET | `/v1/dictionary/search` | `searchDictionary` | `useDictionarySearch` (lang `ja`) | `DictionaryScreen` |
 | GET | `/v1/dictionary/search` *(ẩn danh)* | `searchDictionaryAnon` | `useDictionarySearchAnon`, `useDeinflectionSearch` | `DictionaryScreen` |
 | GET | `/v1/dictionary/suggestions` | `fetchDictionarySuggestions` | `useDictionarySuggestions` | `DictionaryScreen` |
-| GET | `/v1/dictionary/reverse` | `fetchReverseLookup` (`to = "ja"`) | `useReverseLookup` | `ReverseLookupScreen` |
+| GET | `/v1/dictionary/reverse` | `fetchReverseLookup` (`to = "ja"`) | `useReverseLookup` | `DictionaryScreen` (`ReverseResults`) |
 | GET | `/v1/lexemes/{id}/senses` | `fetchLexemeSenses` | `useLexemeSenses` | `DictionaryScreen`, `SenseDetailScreen` |
 | GET | `/v1/senses/{id}` | `fetchSenseDetail` | `useSenseDetail` | `SenseDetailScreen` |
 | GET | `/v1/senses/{id}/links` | `fetchSenseLinks` | `useSenseLinks` | (sẵn sàng cho UI liên kết) |
@@ -138,8 +138,6 @@ Base URL khai báo tại `src/config/env.ts`. Mọi request đi qua `src/api/cli
 | GET | `/v1/tags` | `fetchTags` | *(chưa có UI)* |
 | POST | `/v1/tags` | `createTag` | *(chưa có UI)* |
 | DELETE | `/v1/tags/{id}` | `deleteTag` | *(chưa có UI)* |
-| GET | `/v1/me/achievements` | `fetchAchievements` | *(chưa có UI)* |
-| POST | `/v1/me/achievements/seen` | `markAchievementsSeen` | *(chưa có UI)* |
 
 ## 10. Mã lỗi nghiệp vụ đã xử lý ở UI
 

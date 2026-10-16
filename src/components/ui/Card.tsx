@@ -1,6 +1,6 @@
 import React from "react";
-import { Pressable, type StyleProp, type ViewStyle } from "react-native";
-import { Card as ReusablesCard } from "@/components/reusables/card";
+import { Pressable, View, type StyleProp, type ViewStyle } from "react-native";
+import { TextClassContext } from "@/components/reusables/text";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/theme";
 
@@ -19,7 +19,9 @@ const RIPPLE_ON_DARK = "rgba(255, 255, 255, 0.14)";
 
 /**
  * Khối nội dung bo góc — nền card + viền mảnh; có `onPress` thì thành nút bấm.
- * Lõi là Card của Reusables; bỏ gap/py mặc định (6/6) và bo góc 16 cho đúng khối cũ.
+ * Dựng thẳng View (+ TextClassContext của Reusables Card) thay vì bọc ReusablesCard: Card gốc có `gap-6`,
+ * nếu đè bằng class `gap-0` thì nó thắng cả `style={{ gap }}` mà các màn truyền vào → nội dung dính nhau.
+ * Không đặt class gap nào ở đây để `style.gap` của màn hình có tác dụng.
  */
 export function Card({
   children,
@@ -31,15 +33,17 @@ export function Card({
 }: CardProps) {
   const theme = useTheme();
   const cardClass = cn(
-    "gap-0 overflow-hidden rounded-2xl border-border bg-card py-0",
+    "flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm shadow-black/5",
     padded && "p-4",
   );
 
   if (!onPress) {
     return (
-      <ReusablesCard className={cardClass} style={style} testID={testID}>
-        {children}
-      </ReusablesCard>
+      <TextClassContext.Provider value="text-card-foreground">
+        <View className={cardClass} style={style} testID={testID}>
+          {children}
+        </View>
+      </TextClassContext.Provider>
     );
   }
 

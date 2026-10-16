@@ -1,20 +1,17 @@
 import * as React from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { MoreHorizontal, NotebookText, Play, Plus, Search, X } from "lucide-react-native";
+import { Plus, Search, X } from "lucide-react-native";
 import { ApiError } from "@/api/client";
+import { CollectionNameDialog } from "@/components/collections/CollectionNameDialog";
+import { NotebookCard } from "@/components/collections/NotebookCard";
+import { StudyOverviewCard } from "@/components/collections/StudyOverviewCard";
+import { StartStudySheet } from "@/components/review/StartStudySheet";
 import {
   AppText,
   Button,
   Card,
-  Chip,
   Dialog,
   EmptyState,
   IconButton,
@@ -24,7 +21,6 @@ import {
   Skeleton,
   useToast,
 } from "@/components/ui";
-import { StartStudySheet } from "@/components/review/StartStudySheet";
 import {
   useArchiveCollectionMutation,
   useCollectionsInfiniteQuery,
@@ -34,10 +30,9 @@ import {
 import { useActiveProfile } from "@/hooks/use-profile";
 import { useSrsStatsQuery } from "@/hooks/use-stats";
 import { useT } from "@/i18n";
-import { collectionKindLabel } from "@/lib/dictionary-labels";
-import { formatDate, formatNumber } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
-import { radius, spacing, useTheme } from "@/theme";
+import { spacing, useTheme } from "@/theme";
 import type { CollectionDto } from "@/types/api";
 
 type RootNavigation = NativeStackNavigationProp<RootStackParamList>;
@@ -67,7 +62,6 @@ export function CollectionsScreen() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [createDraft, setCreateDraft] = React.useState("");
   const [query, setQuery] = React.useState("");
-  const [menuTarget, setMenuTarget] = React.useState<CollectionDto | null>(null);
   const [renameTarget, setRenameTarget] = React.useState<CollectionDto | null>(null);
   const [renameDraft, setRenameDraft] = React.useState("");
   const [archiveTarget, setArchiveTarget] = React.useState<CollectionDto | null>(null);
@@ -99,86 +93,54 @@ export function CollectionsScreen() {
     setStudyOpen(true);
   };
 
-  const handleCreate = async () => {
-    const trimmed = createDraft.trim();
-    if (!trimmed) return;
+  /** Chạy một thao tác ghi; lỗi -> toast thông điệp của API. */
+  const runMutation = async (action: () => Promise<unknown>, successMessage: string, done: () => void) => {
     try {
-      await createCollection.mutateAsync({
-        name: trimmed,
-        profile_id: profileId ?? undefined,
-      });
-      show(t("study.created"), { type: "success" });
-      setCreateOpen(false);
-      setCreateDraft("");
+      await action();
+      show(successMessage, { type: "success" });
+      done();
     } catch (error) {
       show(ApiError.from(error).message, { type: "error" });
     }
   };
 
-  const handleRename = async () => {
-    const target = renameTarget;
-    const trimmed = renameDraft.trim();
-    if (!target || !trimmed) return;
-    try {
-      await updateCollection.mutateAsync({ name: trimmed });
-      show(t("study.renamed"), { type: "success" });
-      setRenameTarget(null);
-    } catch (error) {
-      show(ApiError.from(error).message, { type: "error" });
-    }
+  const handleCreate = () => {
+    const name = createDraft.trim();
+    if (!name) return;
+    void runMutation(
+      () => createCollection.mutateAsync({ name, profile_id: profileId ?? undefined }),
+      t("study.createdNamed", { name }),
+      () => {
+        setCreateOpen(false);
+        setCreateDraft("");
+      },
+    );
   };
 
-  const handleArchive = async () => {
+  const handleRename = () => {
+    const name = renameDraft.trim();
+    if (!renameTarget || !name) return;
+    void runMutation(
+      () => updateCollection.mutateAsync({ name }),
+      t("study.renamedNamed", { name }),
+      () => setRenameTarget(null),
+    );
+  };
+
+  const handleArchive = () => {
     const target = archiveTarget;
     if (!target) return;
-    try {
-      await archiveCollection.mutateAsync(target.id);
-      show(t("study.archived"), { type: "success" });
-      setArchiveTarget(null);
-    } catch (error) {
-      show(ApiError.from(error).message, { type: "error" });
-    }
+    void runMutation(
+      () => archiveCollection.mutateAsync(target.id),
+      t("study.archivedNamed", { name: target.name }),
+      () => setArchiveTarget(null),
+    );
   };
 
   /** (a) Tổng quan ôn tập hôm nay + (b) đầu mục sổ tay (đếm, tìm kiếm, tạo mới). */
   const header = (
     <View style={styles.headerBlock}>
-      <Card testID="study-overview">
-        <View style={styles.statsGrid}>
-          <StatCell
-            label={t("study.dueToday")}
-            value={stats.data?.due_now}
-            unit={t("study.cardUnit")}
-            loading={stats.isPending}
-          />
-          <StatCell
-            label={t("study.learning")}
-            value={stats.data?.learning}
-            unit={t("study.cardUnit")}
-            loading={stats.isPending}
-          />
-          <StatCell
-            label={t("study.newToday")}
-            value={stats.data?.new_introduced_today}
-            unit={t("study.cardUnit")}
-            loading={stats.isPending}
-          />
-          <StatCell
-            label={t("study.reviewedToday")}
-            value={stats.data?.reviews_today}
-            unit={t("study.reviewUnit")}
-            loading={stats.isPending}
-          />
-        </View>
-        <Button
-          label={t("study.startToday")}
-          icon={<Play size={18} color={theme.colors.onPrimary} />}
-          onPress={() => openStudy(null)}
-          fullWidth
-          style={styles.startButton}
-          testID="start-study-all"
-        />
-      </Card>
+      <StudyOverviewCard stats={stats} onStartAll={() => openStudy(null)} />
 
       <SectionHeader
         title={t("study.notebooks")}
@@ -287,13 +249,14 @@ export function CollectionsScreen() {
           <NotebookCard
             collection={item}
             onOpen={() =>
-              navigation.navigate("CollectionDetail", {
-                collectionId: item.id,
-                name: item.name,
-              })
+              navigation.navigate("CollectionDetail", { collectionId: item.id, name: item.name })
             }
             onStudy={() => openStudy(item)}
-            onMenu={() => setMenuTarget(item)}
+            onRename={() => {
+              setRenameDraft(item.name);
+              setRenameTarget(item);
+            }}
+            onArchive={() => setArchiveTarget(item)}
           />
         )}
         ListHeaderComponent={header}
@@ -324,101 +287,31 @@ export function CollectionsScreen() {
         collection={studyTarget ? { id: studyTarget.id, name: studyTarget.name } : null}
       />
 
-      {/* Tạo sổ tay */}
-      <Dialog
+      <CollectionNameDialog
         visible={createOpen}
-        onClose={() => setCreateOpen(false)}
         title={t("study.formCreateTitle")}
+        description={t("study.formCreateDesc")}
+        confirmLabel={t("study.formCreate")}
+        value={createDraft}
+        onChange={setCreateDraft}
+        onConfirm={handleCreate}
+        onClose={() => setCreateOpen(false)}
         testID="collection-create-dialog"
-        actions={[
-          {
-            label: t("common.cancel"),
-            variant: "outline",
-            onPress: () => setCreateOpen(false),
-          },
-          {
-            label: t("study.formCreate"),
-            variant: "primary",
-            onPress: () => void handleCreate(),
-          },
-        ]}
-      >
-        <AppText variant="caption">{t("study.formCreateDesc")}</AppText>
-        <Input
-          label={t("study.formName")}
-          value={createDraft}
-          onChangeText={setCreateDraft}
-          placeholder={t("study.formNamePlaceholder")}
-          testID="collection-create-input"
-        />
-      </Dialog>
+        inputTestID="collection-create-input"
+      />
 
-      {/* Menu tuỳ chọn của một sổ tay */}
-      <Dialog
-        visible={Boolean(menuTarget)}
-        onClose={() => setMenuTarget(null)}
-        title={menuTarget?.name ?? t("study.collectionMenu")}
-        testID="collection-menu-dialog"
-        actions={[
-          {
-            label: t("study.studyNotebook"),
-            variant: "outline",
-            onPress: () => {
-              const target = menuTarget;
-              setMenuTarget(null);
-              if (target) openStudy(target);
-            },
-          },
-          {
-            label: t("study.rename"),
-            variant: "outline",
-            onPress: () => {
-              setRenameDraft(menuTarget?.name ?? "");
-              setRenameTarget(menuTarget);
-              setMenuTarget(null);
-            },
-          },
-          {
-            label: t("study.archive"),
-            variant: "danger",
-            onPress: () => {
-              setArchiveTarget(menuTarget);
-              setMenuTarget(null);
-            },
-          },
-        ]}
-      >
-        <AppText variant="caption">{t("study.collectionMenu")}</AppText>
-      </Dialog>
-
-      {/* Đổi tên sổ tay */}
-      <Dialog
+      <CollectionNameDialog
         visible={Boolean(renameTarget)}
-        onClose={() => setRenameTarget(null)}
         title={t("study.formRenameTitle")}
+        description={t("study.formRenameDesc")}
+        confirmLabel={t("study.formSaveRename")}
+        value={renameDraft}
+        onChange={setRenameDraft}
+        onConfirm={handleRename}
+        onClose={() => setRenameTarget(null)}
         testID="collection-rename-dialog"
-        actions={[
-          {
-            label: t("common.cancel"),
-            variant: "outline",
-            onPress: () => setRenameTarget(null),
-          },
-          {
-            label: t("study.formSaveRename"),
-            variant: "primary",
-            onPress: () => void handleRename(),
-          },
-        ]}
-      >
-        <AppText variant="caption">{t("study.formRenameDesc")}</AppText>
-        <Input
-          label={t("study.formName")}
-          value={renameDraft}
-          onChangeText={setRenameDraft}
-          placeholder={t("study.formNamePlaceholder")}
-          testID="collection-rename-input"
-        />
-      </Dialog>
+        inputTestID="collection-rename-input"
+      />
 
       {/* Xác nhận lưu trữ */}
       <Dialog
@@ -427,144 +320,23 @@ export function CollectionsScreen() {
         title={t("study.archiveTitle")}
         testID="collection-archive-dialog"
         actions={[
-          {
-            label: t("common.cancel"),
-            variant: "outline",
-            onPress: () => setArchiveTarget(null),
-          },
-          {
-            label: t("study.archive"),
-            variant: "danger",
-            onPress: () => void handleArchive(),
-          },
+          { label: t("common.cancel"), variant: "outline", onPress: () => setArchiveTarget(null) },
+          { label: t("study.archive"), variant: "danger", onPress: handleArchive },
         ]}
       >
-        <AppText variant="body">
-          {t("study.archiveDesc", { name: archiveTarget?.name ?? "" })}
-        </AppText>
+        <AppText variant="body">{t("study.archiveDesc", { name: archiveTarget?.name ?? "" })}</AppText>
       </Dialog>
     </Screen>
   );
 }
 
-/** Thẻ một sổ tay (mirror web `NotebookCard`): mở chi tiết, học nhanh, menu đổi tên/lưu trữ. */
-function NotebookCard({
-  collection,
-  onOpen,
-  onStudy,
-  onMenu,
-}: {
-  collection: CollectionDto;
-  onOpen: () => void;
-  onStudy: () => void;
-  onMenu: () => void;
-}) {
-  const t = useT();
-  const theme = useTheme();
-  const count = formatNumber(collection.visible_item_count ?? collection.item_count);
-
-  return (
-    <Card onPress={onOpen} testID={`collection-row-${collection.id}`} style={styles.notebookCard}>
-      <View style={styles.notebookTop}>
-        <View
-          style={[
-            styles.notebookIcon,
-            { borderColor: theme.colors.border, backgroundColor: theme.colors.primarySoft },
-          ]}
-        >
-          <NotebookText size={18} color={theme.colors.primary} />
-        </View>
-        <View style={styles.notebookInfo}>
-          <AppText variant="body" weight="semibold" numberOfLines={1}>
-            {collection.name}
-          </AppText>
-          <Chip>{collectionKindLabel(collection.kind)}</Chip>
-        </View>
-        <IconButton
-          icon={<MoreHorizontal size={18} color={theme.colors.textMuted} />}
-          onPress={onMenu}
-          accessibilityLabel={t("study.collectionMenu")}
-          size="sm"
-          testID={`collection-menu-${collection.id}`}
-        />
-      </View>
-
-      <View style={styles.notebookFooter}>
-        <AppText variant="caption" numberOfLines={1} style={styles.flex}>
-          {`${t("study.wordsCount", { count })} · ${formatDate(collection.created_at)}`}
-        </AppText>
-        {/* Học nhanh ngay trên thẻ — mở sheet chọn hình thức học cho sổ này */}
-        <Button
-          label={t("study.studyNotebook")}
-          variant="outline"
-          size="sm"
-          icon={<Play size={14} color={theme.colors.text} />}
-          onPress={onStudy}
-          testID={`collection-study-${collection.id}`}
-        />
-      </View>
-    </Card>
-  );
-}
-
-/** Một ô thống kê nhỏ: giá trị lớn + nhãn; hiện skeleton khi đang tải. */
-function StatCell({
-  label,
-  value,
-  unit,
-  loading,
-}: {
-  label: string;
-  value?: number;
-  unit: string;
-  loading: boolean;
-}) {
-  if (loading) {
-    return (
-      <View style={styles.statCell}>
-        <Skeleton width={48} height={24} />
-        <Skeleton width={84} height={12} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.statCell}>
-      <AppText variant="title">
-        {`${formatNumber(value ?? 0)} ${unit}`}
-      </AppText>
-      <AppText variant="caption">{label}</AppText>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screenContent: { padding: 0 },
-  flex: { flex: 1 },
   content: { padding: spacing.lg, gap: spacing.lg },
   headerBlock: { gap: spacing.md },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    rowGap: spacing.lg,
-  },
-  statCell: { width: "50%", gap: spacing.xs },
-  startButton: { marginTop: spacing.lg },
   list: { gap: spacing.sm },
   skeletonCard: { gap: spacing.sm },
   errorCard: { gap: spacing.sm },
   retry: { alignSelf: "center" },
   listFooter: { alignItems: "center", gap: spacing.sm, paddingVertical: spacing.sm },
-  notebookCard: { gap: spacing.md },
-  notebookTop: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  notebookIcon: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-  notebookInfo: { flex: 1, gap: spacing.xs },
-  notebookFooter: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
 });

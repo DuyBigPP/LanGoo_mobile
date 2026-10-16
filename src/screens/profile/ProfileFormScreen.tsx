@@ -27,9 +27,6 @@ import { spacing } from "@/theme";
 
 type ProfileFormScreenProps = NativeStackScreenProps<RootStackParamList, "ProfileForm">;
 
-/** Thiếu khoá i18n cho ghi chú ngôn ngữ cố định — dùng tạm chuỗi tiếng Việt. */
-const FIXED_LANGUAGE_NOTE = "Ứng dụng chỉ học tiếng Nhật — ngôn ngữ hồ sơ được cố định.";
-
 /**
  * Tạo/sửa hồ sơ học: chỉ nhập tên, ngôn ngữ cố định JA (app Nhật-only).
  * Tạo mới -> invalidate danh sách; sửa -> mutation tự làm mới cache.
@@ -127,6 +124,7 @@ export function ProfileFormScreen({ navigation, route }: ProfileFormScreenProps)
                 placeholder={t("profile.formNamePlaceholder")}
                 autoCapitalize="words"
                 error={error}
+                maxLength={80}
                 testID="profile-form-name"
               />
             </Card>
@@ -139,7 +137,7 @@ export function ProfileFormScreen({ navigation, route }: ProfileFormScreenProps)
                   <AppText variant="body" weight="semibold">
                     {t("onboarding.japanese")}
                   </AppText>
-                  <AppText variant="caption">{FIXED_LANGUAGE_NOTE}</AppText>
+                  <AppText variant="caption">{t("profile.fixedLanguageNote")}</AppText>
                 </View>
                 <Badge>{t("profile.formPrimary")}</Badge>
               </View>

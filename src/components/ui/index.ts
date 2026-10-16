@@ -30,6 +30,8 @@ export { Pager } from "./Pager";
 export type { PagerProps } from "./Pager";
 export { BottomSheet } from "./BottomSheet";
 export type { BottomSheetProps } from "./BottomSheet";
+export { ActionMenu } from "./ActionMenu";
+export type { ActionMenuItem, ActionMenuProps } from "./ActionMenu";
 export { Dialog } from "./Dialog";
 export type { DialogAction, DialogProps } from "./Dialog";
 export { ToastProvider, useToast, toastError, toastSuccess } from "./Toast";

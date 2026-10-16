@@ -34,6 +34,8 @@ export interface InputProps {
   textContentType?: TextInputProps["textContentType"];
   /** true = đóng bàn phím sau khi submit (mặc định của TextInput). */
   blurOnSubmit?: boolean;
+  /** Giới hạn ký tự (khớp giới hạn của API, tránh 400 khi gửi quá dài). */
+  maxLength?: number;
   rightSlot?: React.ReactNode;
   testID?: string;
   style?: StyleProp<ViewStyle>;
@@ -58,6 +60,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     autoFocus,
     textContentType,
     blurOnSubmit,
+    maxLength,
     rightSlot,
     testID,
     style,
@@ -72,8 +75,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
       {label ? <Text className="mb-1 text-sm font-semibold">{label}</Text> : null}
       <View
         className={cn(
-          // Khung viền cũ: cao tối thiểu 44, bo góc 12, viền 1.5px, nền card
-          "min-h-[44px] flex-row items-center rounded-xl border-[1.5px] bg-card px-3",
+          // Cao tối thiểu 44 (vùng chạm mobile, web chỉ 36), bo góc 12, viền 1px như web, nền card
+          "min-h-[44px] flex-row items-center rounded-lg border bg-card px-3",
           multiline && "items-start py-2",
           // Ưu tiên viền: lỗi > đang focus > mặc định
           hasError ? "border-destructive" : focused ? "border-primary" : "border-border",
@@ -95,6 +98,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           autoFocus={autoFocus}
           textContentType={textContentType}
           blurOnSubmit={blurOnSubmit}
+          maxLength={maxLength}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           testID={testID}

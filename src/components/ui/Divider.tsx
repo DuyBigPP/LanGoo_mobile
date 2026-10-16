@@ -1,18 +1,12 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { type StyleProp, type ViewStyle } from "react-native";
+import { Separator } from "@/components/reusables/separator";
 
 export interface DividerProps {
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
 
-/** Đường kẻ mảnh 1 hairline theo màu viền của theme. */
+/** Đường kẻ mảnh theo màu viền của theme — lõi là Separator của React Native Reusables. */
 export function Divider({ style, testID }: DividerProps) {
-  return (
-    <View
-      className="self-stretch bg-border"
-      // hairlineWidth phụ thuộc mật độ điểm ảnh từng máy — Tailwind không có utility tương ứng
-      style={[{ height: StyleSheet.hairlineWidth }, style]}
-      testID={testID}
-    />
-  );
+  return <Separator className="self-stretch" style={style} testID={testID} />;
 }

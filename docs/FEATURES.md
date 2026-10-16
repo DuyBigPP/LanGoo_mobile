@@ -15,7 +15,7 @@
 | Refresh token | Tự làm mới trước 90s khi hết hạn, single-flight, retry 1 lần khi 401 | `src/api/client.ts` |
 | Onboarding | 2 bước: tên hồ sơ → mục tiêu/ngày (5/10/20/30). Ngôn ngữ **cố định JA** | `OnboardingScreen` |
 | Nhiều hồ sơ | Tạo/sửa/xoá/chọn hồ sơ hoạt động; đổi hồ sơ → tự dọn cache theo scope | `ProfileScreen`, `ProfileFormScreen`, `useScopeReset` |
-| Cài đặt học | Mục tiêu ngày, số thẻ mới/ngày, số lượt ôn/ngày, giao diện sáng/tối | `SettingsScreen` |
+| Cài đặt học | Mục tiêu ngày, số thẻ mới/ngày, số lượt ôn/ngày, **múi giờ** (+ "dùng giờ máy"), giao diện sáng/tối, đổi VI/EN — nằm ngay trong tab Hồ sơ | `ProfileScreen` + `SettingsSection` |
 | Đăng xuất | Xoá phiên client trước, thu hồi server best-effort | `ProfileScreen` |
 
 ### 1.2 Từ điển (lõi học tập)
@@ -29,7 +29,7 @@
 | Lịch sử tra | Danh sách từ đã tra (phân trang client 10/trang), chạm để tra lại | `useSearchHistory` |
 | Chi tiết nghĩa | Nhóm nghĩa + nghĩa con (thu gọn “N nghĩa khác”), gloss VI trước, ví dụ, dạng từ | `SenseDetailScreen` |
 | Chi tiết chữ Hán | Âm Kun/On/Nanori/Hán-Việt, nghĩa, nét, JLPT, bộ thủ, cây thành phần | `KanjiDetailScreen` |
-| Tra ngược VI→JA | Nhập nghĩa tiếng Việt → danh sách từ Nhật (badge “đúng nghĩa”, “qua lemma”) | `ReverseLookupScreen` |
+| Tra ngược VI→JA | Segmented auto/ja/vi trong Từ điển; nhập tiếng Việt (tự nhận diện) → danh sách từ Nhật **inline** (badge “đúng nghĩa”, “qua lemma”), chip “đã nhận diện” | `DictionaryScreen` + `ReverseResults` |
 | Thêm vào sổ tay | Chọn bộ + nghĩa + ghi chú; xử lý lỗi ngôn ngữ không thuộc hồ sơ | `AddToCollectionSheet` |
 | Báo lỗi nghĩa | Gửi gloss report (API sẵn sàng, UI tối thiểu) | `useGlossReportMutation` |
 
@@ -92,13 +92,13 @@
 | --- | --- | --- |
 | Đọc PDF + session PDF | **Hoãn** | Cần native PDF layer; web dùng pdf.js + text layer |
 | Viết tay / nhận diện ONNX | **Đã làm (14/10)** | `onnxruntime-react-native` + model DaKanji (2.1MB) trong `assets/models/dakanji/`; màn `HandwritingScreen` (vẽ bằng Svg + PanResponder, tự nhận dạng sau 600ms, bấm gợi ý → tra luôn). Lưu ý release Android: asset vào `res/raw` nên cần native copy (debug qua Metro thì OK) |
-| Furigana (kuromoji) | **Hoãn** | Từ điển kuromoji nặng; có thể bổ sung sau bằng thư viện JS thuần |
+| Furigana (kuromoji) | **Đã làm (16/10)** | `lib/furigana.ts` (loader tự viết đọc từ điển trong assets Android qua react-native-fs) + `FuriganaText` (ruby = cột reading nhỏ trên chữ chính). Hiện ở panel "Phân tích" trang Dịch (Switch bật/tắt, nhớ lựa chọn), phiếu tra nhanh và thẻ dịch dự phòng. Từ điển ~17MB chép bằng `scripts/copy-kuromoji-dict.js` (postinstall, gitignore); nạp lần đầu hơi chậm/tốn RAM |
 | Hoạt ảnh nét chữ Hán (SVG) | **Hoãn** | Cần dữ liệu KanjiVG + animation; màn chi tiết hiện chỉ hiện dữ liệu (vẽ tay đã có ở màn Vẽ chữ) |
-| Đăng nhập Google | **Hoãn** | Cần native Google Sign-In; v1 chỉ email/mật khẩu |
+| Đăng nhập Google | **Hoãn (chủ ý, 16/10)** | Cần native Google Sign-In + Android OAuth client; v1 chỉ email/mật khẩu. `.env` đã để sẵn `GOOGLE_WEB_CLIENT_ID` |
 | PWA / Service Worker | Không áp dụng | Đặc thù web |
-| Banner offline | **Hoãn** | Cần NetInfo; có thể thêm nhanh khi cần |
-| UI thành tựu (achievements) | API có, **chưa có màn** | `/v1/me/achievements` đã port sẵn ở `api/gamification.ts` |
-| UI tag | API có, **chưa có màn** | `/v1/tags` đã port sẵn ở `api/tags.ts` |
+| Banner offline | **Đã làm (16/10)** | `@react-native-community/netinfo` nạp lazy (`lib/netinfo.ts`); chưa link native thì coi như online. Cũng nối `onlineManager` của React Query |
+| UI thành tựu / XP | **Không làm** | Web cũng đã ẩn XP và thành tựu; đã xoá code RN tương ứng |
+| Tag | **Đã có** | Chọn tag khi sửa mục (`EditItemScreen` + `TagPicker`) |
 
 ## 3b. Đồng bộ với web (14/10/2026)
 
@@ -114,6 +114,23 @@
 | Thứ tự nét | **Hoạt ảnh vẽ từng nét** chữ Hán (KanjiVG từ backend + react-native-svg) trong chi tiết chữ Hán, có nút phát lại |
 | TTS | Nút loa **luôn hiện** (máy thiếu engine thì báo toast), thêm loa ở kết quả tra, từng gloss, từng ví dụ, hàng sổ tay, đề bài quiz |
 | Hồ sơ | **Ẩn quản lý hồ sơ** (app chỉ học tiếng Nhật): bỏ danh sách/tạo/sửa/xoá hồ sơ, giữ tài khoản + thống kê + cài đặt |
+
+## 3c. Đồng bộ web lần 2 (16/10/2026)
+
+| Khu vực | Đã đồng bộ |
+| --- | --- |
+| Chế độ khách | Mở app vào thẳng Từ điển; Từ điển / Dịch / Nguồn dùng không cần tài khoản. Tab Sổ tay/Chat và các hành động cần tài khoản mở modal Login (`useRequireAuth`). Guest không gọi API cần token |
+| Đăng nhập | Login/Register là modal có logo, đổi VI/EN, nút đóng; gợi ý mật khẩu |
+| Hồ sơ | Gộp Cài đặt vào tab Hồ sơ, thêm múi giờ, mục Khác (Góp ý/Nguồn/JLPT), ẩn XP + thành tựu; guest có thẻ đăng nhập + giao diện + ngôn ngữ |
+| Tra ngược | Inline trong Từ điển, bỏ màn riêng |
+| Quiz | Tổng kết có loại bài, điểm, "phiên mới", "về từ điển" |
+| Kanji / viết tay | Nút chép chữ Hán, số dạng từ dùng chữ này; viết tay ghép nhiều chữ thành từ (chạm gợi ý = thêm vào từ, nút Tra cứu) |
+| Độ bền | `ErrorBoundary`, màn lỗi tải hồ sơ, gợi ý "máy chủ đang khởi động" sau 4s, banner offline |
+| Giao diện | Màu theo token oklch của web, bo góc sm8/md10/lg12/xl16, cỡ chữ mặc định Tailwind, font Be Vietnam Pro, nhãn tab bar 10px, viền input 1px. Giữ **vùng chạm ≥ 44px** của Button/Input (web chỉ 36px vì dùng chuột) |
+| i18n | Catalog khớp web (thêm khoá thiếu, đổi tên `homograph`/`hanVietLabel`/`addedToNamed`/`createdNamed`…), bỏ chuỗi viết cứng |
+
+| Bôi đen → tra nhanh | RN không bắt được vùng bôi đen như `window.getSelection()` → bôi đen (nội dung là `selectable`) rồi bấm **Copy** của hệ thống: `lib/clipboard.ts` nghe clipboard đổi → `ClipboardLookup` mở phiếu tra nhanh. Nút copy trong app dùng `copyText()` nên KHÔNG kích hoạt tra nhanh. Chưa tra được thì dịch máy cả cụm (kèm furigana) |
+| Reusables | `SegmentedControl`→Tabs, `Dialog`→Dialog, chọn ngôn ngữ→Select, `Divider`→Separator, `ActionMenu`→DropdownMenu (menu ⋯ Sổ tay), công tắc furigana→Switch. Dialog/Select/Dropdown render qua `PortalHost` nên **không dùng trong BottomSheet/Modal gốc** (bị che) |
 
 ## 4. Cơ chế quan trọng đã port (giữ đúng hợp đồng backend)
 

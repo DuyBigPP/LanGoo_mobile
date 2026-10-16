@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { X } from "lucide-react-native";
 import { AddToCollectionSheet } from "@/components/dictionary/AddToCollectionSheet";
+import { FuriganaText } from "@/components/common/FuriganaText";
 import { SpeakButton } from "@/components/domain/SpeakButton";
 import {
   AppText,
@@ -14,8 +15,12 @@ import {
   Skeleton,
 } from "@/components/ui";
 import { useDictionarySearch, useKanji, useLexemeSenses } from "@/hooks/use-dictionary";
+import { useFurigana, useFuriganaPreference } from "@/hooks/use-furigana";
+import { useTranslation } from "@/hooks/use-translation";
 import { useT } from "@/i18n";
+import { useAuth, useRequireAuth } from "@/contexts/AuthContext";
 import { kanjiMeaningsEn, kanjiReadings } from "@/lib/kanji";
+import { hasKanji } from "@/lib/furigana";
 import { isSingleKanji } from "@/lib/lang";
 import type { RootStackParamList } from "@/navigation/types";
 import { spacing, useTheme } from "@/theme";
@@ -47,6 +52,8 @@ interface AddTarget {
 export function LookupSheet({ query, onClose }: LookupSheetProps) {
   // Giữ nội dung của lần tra gần nhất trong lúc sheet trượt xuống (tránh nháy trống)
   const [lastQuery, setLastQuery] = React.useState<string | null>(null);
+  const { status } = useAuth();
+  const requireAuth = useRequireAuth();
   const [addTarget, setAddTarget] = React.useState<AddTarget | null>(null);
 
   React.useEffect(() => {
@@ -59,7 +66,15 @@ export function LookupSheet({ query, onClose }: LookupSheetProps) {
     <>
       <BottomSheet visible={query !== null} onClose={onClose} testID="lookup-sheet">
         {contentQuery !== null ? (
-          <LookupContent query={contentQuery} onClose={onClose} onAdd={setAddTarget} />
+          <LookupContent
+            query={contentQuery}
+            onClose={onClose}
+            onAdd={target => {
+              // Guest: đóng sheet (Modal nằm trên cùng) rồi mới mở modal Login
+              if (status !== "authenticated") onClose();
+              requireAuth(() => setAddTarget(target));
+            }}
+          />
         ) : null}
       </BottomSheet>
 
@@ -86,6 +101,9 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
   const theme = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const singleKanji = isSingleKanji(query);
+  // Từ/cụm có chữ Hán (không phải một kanji đơn — đã có thẻ chữ Hán): hiện furigana trên đầu như web
+  const [furiganaEnabled] = useFuriganaPreference();
+  const furigana = useFurigana(query, furiganaEnabled && !singleKanji);
 
   const search = useDictionarySearch({ q: query });
   // Chỉ tra thẻ chữ Hán khi chữ đang tra là một kanji đơn (endpoint /v1/kanji/{literal})
@@ -119,15 +137,21 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
     >
       {/* Đầu phiếu: chữ đang tra + loa đọc + nút đóng */}
       <View style={styles.header}>
-        <AppText
-          size="xxl"
-          weight="bold"
-          numberOfLines={1}
-          style={styles.flex}
-          testID="lookup-query"
-        >
-          {query}
-        </AppText>
+        {furigana.status === "done" && hasKanji(query) ? (
+          <View style={styles.flex} testID="lookup-query">
+            <FuriganaText segments={furigana.segments} size={24} />
+          </View>
+        ) : (
+          <AppText
+            size="xxl"
+            weight="bold"
+            numberOfLines={1}
+            style={styles.flex}
+            testID="lookup-query"
+          >
+            {query}
+          </AppText>
+        )}
         <SpeakButton text={query} lang="ja" size="sm" testID="lookup-speak" />
         <IconButton
           icon={<X size={20} color={theme.colors.textMuted} />}
@@ -216,11 +240,40 @@ function LookupContent({ query, onClose, onAdd }: LookupContentProps) {
           ))}
         </View>
       ) : (
-        <AppText variant="caption" testID="lookup-empty">
-          {t("dict.lookupNotFound", { query })}
-        </AppText>
+        <View style={styles.results}>
+          <AppText variant="caption" testID="lookup-empty">
+            {t("dict.lookupNotFound", { query })}
+          </AppText>
+          <LookupTranslation query={query} />
+        </View>
       )}
     </ScrollView>
+  );
+}
+
+/** Không có trong từ điển -> dịch máy cả cụm (như TranslationDetailDialog trên web). */
+function LookupTranslation({ query }: { query: string }) {
+  const t = useT();
+  const translation = useTranslation(query, true);
+
+  return (
+    <Card style={styles.kanjiCard} testID="lookup-translation">
+      <AppText variant="label">{t("dict.lookupTranslationTitle")}</AppText>
+      {translation.status === "loading" ? (
+        <AppText variant="caption">{t("dict.lookupTranslating")}</AppText>
+      ) : translation.status === "error" ? (
+        <View style={styles.stateRow}>
+          <AppText variant="caption" color="danger" style={styles.flex}>
+            {t("dict.lookupTranslateError")}
+          </AppText>
+          <Button label={t("common.retry")} variant="outline" size="sm" onPress={translation.refetch} />
+        </View>
+      ) : translation.result?.text ? (
+        <AppText variant="body" selectable>
+          {translation.result.text}
+        </AppText>
+      ) : null}
+    </Card>
   );
 }
 
