@@ -82,7 +82,19 @@ export async function fetchReverseLookup({
   const { data } = await api.get<ReverseLookupResultDto>("/v1/dictionary/reverse", {
     params: { q: q.slice(0, MAX_REVERSE_QUERY_LENGTH), to },
   });
-  return data;
+  return { ...data, en: data.en.map(snakeKeys), ja: data.ja.map(snakeKeys) };
+}
+
+/**
+ * Backend hiện trả hit tra ngược bằng camelCase (lexemeId, senseHint…) trái Swagger (snake_case).
+ * ponytail: chuẩn hoá tạm cả hai kiểu; bỏ khi backend trả lại snake_case.
+ */
+function snakeKeys<T>(hit: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(hit as Record<string, unknown>)) {
+    out[key.replace(/[A-Z]/g, char => `_${char.toLowerCase()}`)] = value;
+  }
+  return out as T;
 }
 
 export async function fetchLexemeSenses(lexemeId: string): Promise<LexemeSensesResultDto> {
