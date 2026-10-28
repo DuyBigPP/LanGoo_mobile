@@ -4,21 +4,28 @@ import { Animated, Pressable, StyleSheet, View } from "react-native";
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
   type InfiniteData,
 } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { CheckCircle2 } from "lucide-react-native";
+import { CheckCircle2, Info, Trash2 } from "lucide-react-native";
 import { ApiError } from "@/api/client";
+import { deleteCollectionItem } from "@/api/collections";
+import { searchDictionaryAnon } from "@/api/dictionary";
 import { fetchDue, postReview } from "@/api/srs";
 import { SpeakButton } from "@/components/domain/SpeakButton";
-import { AppText, Button, ProgressBar, Screen, Skeleton, useToast } from "@/components/ui";
+import { AppText, Button, Chip, Dialog, Flag, ProgressBar, Screen, Skeleton, useToast } from "@/components/ui";
+import { collectionKeys } from "@/hooks/use-collections";
+import { posLabel } from "@/lib/dictionary-labels";
+import { flashcardTextSize, pickWordHit } from "@/lib/flashcard";
 import type { SpeakLang } from "@/hooks/use-speech";
 import { useActiveProfile } from "@/hooks/use-profile";
 import { useT } from "@/i18n";
 import type { RootStackParamList } from "@/navigation/types";
 import { radius, spacing, useTheme } from "@/theme";
 import type { CreateReviewDto, DueItemDto, DueResultDto } from "@/types/api";
+import type { SearchHitDto } from "@/types/dictionary";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Flashcard">;
 
@@ -75,6 +82,18 @@ export function FlashcardScreen({ navigation, route }: Props) {
       void queryClient.invalidateQueries({ queryKey: ["me-stats"] });
     },
   });
+
+  // Xoá hẳn từ khỏi bộ (cascade thẻ + SRS ở server) — flashcard chạy trên /srs/due, không theo phiên
+  const removeWord = useMutation({
+    mutationFn: (target: DueItemDto) => deleteCollectionItem(target.collection_id, target.item_id),
+    onSuccess: (_data, target) => {
+      void queryClient.invalidateQueries({ queryKey: ["collections", target.collection_id] });
+      void queryClient.invalidateQueries({ queryKey: collectionKeys.list });
+      void queryClient.invalidateQueries({ queryKey: ["srs-stats"] });
+      void queryClient.invalidateQueries({ queryKey: ["me-stats"] });
+    },
+  });
+  const [removing, setRemoving] = React.useState<DueItemDto | null>(null);
 
   const [index, setIndex] = React.useState(0);
   const [flipped, setFlipped] = React.useState(false);
@@ -138,6 +157,49 @@ export function FlashcardScreen({ navigation, route }: Props) {
     },
     [queryClient, dueKey],
   );
+
+  /** Bỏ mọi thẻ của một từ (cả chiều nhận diện lẫn gợi nhớ) khỏi snapshot */
+  const removeItemFromCache = React.useCallback(
+    (itemId: string) => {
+      queryClient.setQueryData<InfiniteData<DueResultDto>>(
+        dueKey,
+        (previous: InfiniteData<DueResultDto> | undefined) =>
+        previous
+          ? {
+              ...previous,
+              pages: previous.pages.map(page => ({
+                ...page,
+                data: page.data.filter(item => item.item_id !== itemId),
+              })),
+            }
+          : previous,
+      );
+    },
+    [queryClient, dueKey],
+  );
+
+  const confirmRemove = () => {
+    if (!removing || removeWord.isPending) return;
+    const target = removing;
+    const done = () => {
+      removeItemFromCache(target.item_id);
+      setRemoving(null);
+      setFlipped(false);
+      shownAt.current = Date.now();
+    };
+    removeWord.mutate(target, {
+      onSuccess: () => {
+        done();
+        show(t("review.removedWord"), { type: "success" });
+      },
+      onError: error => {
+        const apiError = ApiError.from(error);
+        // Từ đã bị xoá ở nơi khác -> coi như xong, chỉ bỏ thẻ khỏi hàng đợi
+        if (apiError.code === "COLLECTION_ITEM_NOT_FOUND") done();
+        else show(apiError.message, { type: "error" });
+      },
+    });
+  };
 
   // Đổi thẻ -> về mặt trước, đếm lại thời gian hiển thị
   React.useEffect(() => {
@@ -237,7 +299,7 @@ export function FlashcardScreen({ navigation, route }: Props) {
       <View className="rounded-lg border border-border bg-card p-4">
         {due.isPending ? (
           <View className="gap-3">
-            <Skeleton height={300} className="rounded-lg" />
+            <Skeleton height={340} className="rounded-lg" />
             <Skeleton height={16} width="55%" />
           </View>
         ) : due.isError ? (
@@ -281,11 +343,18 @@ export function FlashcardScreen({ navigation, route }: Props) {
         ) : !card ? (
           // Đang nối tiếp trang sau / kiểm tra lại hàng đợi
           <View className="gap-3" testID="flash-loading-next">
-            <Skeleton height={300} className="rounded-lg" />
+            <Skeleton height={340} className="rounded-lg" />
           </View>
         ) : (
           <View className="gap-4">
-            <FlipCard card={card} flipped={flipped} onFlip={() => setFlipped(value => !value)} />
+            <FlipCard
+              card={card}
+              flipped={flipped}
+              onFlip={() => setFlipped(value => !value)}
+              onOpenDetail={hit =>
+                navigation.navigate("SenseDetail", { lexemeId: hit.lexeme_id, surface: hit.surface })
+              }
+            />
 
             {flipped ? (
               <View className="flex-row flex-wrap gap-2">
@@ -301,6 +370,16 @@ export function FlashcardScreen({ navigation, route }: Props) {
                     testID={`flash-rating-${option.rating}`}
                   />
                 ))}
+                <Button
+                  label={t("review.removeWord")}
+                  variant="ghost"
+                  size="sm"
+                  icon={<Trash2 size={14} color={theme.colors.danger} />}
+                  onPress={() => setRemoving(card)}
+                  disabled={review.isPending || removeWord.isPending}
+                  className="basis-full"
+                  testID="flash-remove-word"
+                />
               </View>
             ) : (
               <AppText variant="caption" center>
@@ -316,8 +395,49 @@ export function FlashcardScreen({ navigation, route }: Props) {
           </View>
         )}
       </View>
+
+      <Dialog
+        visible={removing !== null}
+        onClose={() => {
+          if (!removeWord.isPending) setRemoving(null);
+        }}
+        title={t("review.removeWordTitle")}
+        testID="flash-remove-dialog"
+        actions={[
+          {
+            label: t("common.cancel"),
+            variant: "outline",
+            onPress: () => {
+              if (!removeWord.isPending) setRemoving(null);
+            },
+          },
+          { label: t("review.removeWordConfirm"), variant: "danger", onPress: confirmRemove },
+        ]}
+      >
+        <AppText variant="body">{t("review.removeWordDesc")}</AppText>
+      </Dialog>
     </Screen>
   );
+}
+
+/**
+ * Từ trên thẻ trong từ điển: thẻ /srs/due không có pos/sense_id nên tra theo chữ mặt "word"
+ * -> từ loại + mở chi tiết từ.
+ */
+function useCardWord(card: DueItemDto): SearchHitDto | null {
+  const isPromptWord = card.prompt.kind === "word";
+  const text = isPromptWord ? card.prompt.text : card.answer.text;
+  // Mặt đáp án kiểu "word" (chiều gợi nhớ) cũng có reading dù type answer không khai
+  const reading = isPromptWord
+    ? card.prompt.reading
+    : ((card.answer as { reading?: string | null }).reading ?? null);
+  const lang = card.language.code === "en" ? "en" : "ja";
+  const search = useQuery({
+    queryKey: ["dictionary", "search-anon", text, lang],
+    queryFn: () => searchDictionaryAnon({ q: text, lang }),
+    staleTime: 10 * 60_000,
+  });
+  return pickWordHit(search.data?.data ?? [], text, reading);
 }
 
 /** Thẻ lật 3D: mặt trước là đề (JA + loa), mặt sau là nghĩa (VI + loa). */
@@ -325,14 +445,37 @@ function FlipCard({
   card,
   flipped,
   onFlip,
+  onOpenDetail,
 }: {
   card: DueItemDto;
   flipped: boolean;
   onFlip: () => void;
+  onOpenDetail: (hit: SearchHitDto) => void;
 }) {
   const t = useT();
   const theme = useTheme();
   const progress = React.useRef(new Animated.Value(0)).current;
+  const hit = useCardWord(card);
+  const pos = posLabel(hit?.pos);
+
+  // Hàng huy hiệu: ngôn ngữ + từ loại (giống bản web)
+  const badges = (
+    <View className="flex-row items-center justify-center gap-1.5">
+      <Flag code={card.language.code} size="sm" />
+      {pos ? <Chip testID="flash-pos">{pos}</Chip> : null}
+    </View>
+  );
+  // Nút con trong Pressable lật thẻ: chạm nút không lật (RN giao chạm cho phần tử trong cùng)
+  const detailButton = hit ? (
+    <Button
+      label={t("dict.lookupSenseDetail")}
+      variant="ghost"
+      size="sm"
+      icon={<Info size={14} color={theme.colors.textMuted} />}
+      onPress={() => onOpenDetail(hit)}
+      testID="flash-detail"
+    />
+  ) : null;
 
   React.useEffect(() => {
     Animated.timing(progress, {
@@ -357,7 +500,7 @@ function FlipCard({
       accessibilityRole="button"
       accessibilityLabel={flipped ? t("review.flipBack") : t("review.flipReveal")}
       testID="flash-card"
-      className="h-[300px]"
+      className="h-[340px]"
     >
       {/* Mặt trước: từ tiếng Nhật */}
       <Animated.View
@@ -368,10 +511,11 @@ function FlipCard({
           { transform: [{ perspective: 1000 }, { rotateY: frontRotate }] },
         ]}
       >
+        {badges}
         <AppText variant="caption" color="muted" center>
           {card.instruction}
         </AppText>
-        <AppText size="hero" weight="bold" center numberOfLines={2}>
+        <AppText size={flashcardTextSize(card.prompt.text)} weight="bold" center numberOfLines={6}>
           {card.prompt.text}
         </AppText>
         {card.prompt.reading && card.prompt.reading !== card.prompt.text ? (
@@ -386,6 +530,7 @@ function FlipCard({
             testID="flash-speak-front"
           />
         </View>
+        {detailButton}
       </Animated.View>
 
       {/* Mặt sau: nghĩa tiếng Việt */}
@@ -397,15 +542,17 @@ function FlipCard({
           { transform: [{ perspective: 1000 }, { rotateY: backRotate }] },
         ]}
       >
+        {badges}
         <AppText variant="caption" color="muted" center>
           {t("review.answer")}
         </AppText>
-        <AppText variant="title" center numberOfLines={4}>
+        <AppText size={flashcardTextSize(card.answer.text)} weight="bold" center numberOfLines={6}>
           {card.answer.text}
         </AppText>
         <View className="mt-1 flex-row justify-center">
           <SpeakButton text={card.answer.text} lang="vi" testID="flash-speak-back" />
         </View>
+        {detailButton}
       </Animated.View>
     </Pressable>
   );
