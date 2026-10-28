@@ -338,8 +338,6 @@ export const vi = {
     lookupTranslationDetail: "Chi tiết bản dịch",
     lookupInPhrase: "Từ trong cụm",
     lookupWordDetail: "Chi tiết từ",
-    deinflectTitle: "Dạng chia của từ",
-    deinflectFrom: "từ “{from}”",
     deinflectChip: "thể chia",
     lookupKanjiDetail: "Chi tiết chữ Hán",
     lookupCopy: "Sao chép",

@@ -112,12 +112,13 @@ export function DictionaryScreen({ route }: DictionaryScreenProps) {
     submitted,
     tab === "results" && !isReverse && search.isSuccess,
   );
-  const deinflectHit =
-    deinflectSearch.hit &&
-    !allHits.some(hit => hit.lexeme_id === deinflectSearch.hit?.lexeme_id)
-      ? deinflectSearch.hit
-      : null;
-  const showTranslation = noHits && !deinflectHit && deinflectSearch.done;
+  // Thể gốc đưa thẳng lên đầu kết quả (không tách mục riêng)
+  const deinflectHit = deinflectSearch.hit;
+  const displayHits =
+    deinflectHit && !allHits.some(hit => hit.lexeme_id === deinflectHit.lexeme_id)
+      ? [deinflectHit, ...allHits]
+      : allHits;
+  const showTranslation = noHits && displayHits.length === 0 && deinflectSearch.done;
 
   const history = useSearchHistory(tab === "history");
   const historyItems = React.useMemo(() => history.data?.data ?? [], [history.data]);
@@ -259,8 +260,8 @@ export function DictionaryScreen({ route }: DictionaryScreenProps) {
               query={submitted}
               search={search}
               pageCount={pages.length}
-              hits={allHits}
-              deinflectHit={deinflectHit}
+              hits={displayHits}
+              loading={search.isPending || (allHits.length === 0 && !deinflectSearch.done)}
               kanjiLiteral={isSingleKanji(submitted) ? submitted.trim() : null}
               showTranslation={showTranslation}
               onOpenSense={openSense}

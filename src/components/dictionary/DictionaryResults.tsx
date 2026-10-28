@@ -1,6 +1,6 @@
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
-import { ChevronDown, CornerDownRight } from "lucide-react-native";
+import { ChevronDown } from "lucide-react-native";
 import { KanjiCard } from "@/components/dictionary/KanjiCard";
 import { ResultRow } from "@/components/dictionary/ResultRow";
 import { TranslationFallback } from "@/components/dictionary/TranslationFallback";
@@ -17,22 +17,23 @@ export interface DictionaryResultsProps {
   search: ReturnType<typeof useDictionarySearch>;
   /** Số trang đã nạp (để biết có hiện dòng "đã tải hết" hay không). */
   pageCount: number;
+  /** Kết quả, đã chèn thể gốc (たおさない -> たおす, 勉強する -> 勉強) lên đầu nếu có. */
   hits: SearchHitDto[];
-  /** Thể gốc của dạng chia khi backend không có entry cho dạng đang tra. */
-  deinflectHit: SearchHitDto | null;
+  /** Đang tra hoặc chưa thử xong thể gốc -> skeleton (không chớp "không tìm thấy"). */
+  loading: boolean;
   /** Một chữ Hán đơn -> kèm thẻ chữ Hán. */
   kanjiLiteral: string | null;
   showTranslation: boolean;
   onOpenSense: (hit: SearchHitDto) => void;
 }
 
-/** Kết quả tra xuôi (JA): thẻ kanji, thể gốc, danh sách + "Tải thêm", dịch dự phòng. */
+/** Kết quả tra xuôi (JA): thẻ kanji, danh sách + "Tải thêm", dịch dự phòng. */
 export function DictionaryResults({
   query,
   search,
   pageCount,
   hits,
-  deinflectHit,
+  loading,
   kanjiLiteral,
   showTranslation,
   onOpenSense,
@@ -45,7 +46,7 @@ export function DictionaryResults({
       {/* Tra một chữ Hán: thẻ kanji đầy đủ (âm đọc, nghĩa, số nét, bộ, JLPT) */}
       {kanjiLiteral ? <KanjiCard literal={kanjiLiteral} /> : null}
 
-      {search.isPending ? (
+      {loading ? (
         <Card testID="dict-results-loading">
           {[0, 1, 2, 3, 4].map(index => (
             <View key={index} className="gap-2 py-2">
@@ -70,26 +71,6 @@ export function DictionaryResults({
         </Card>
       ) : (
         <>
-          {/* Thể chia của từ — backend không có entry cho dạng đang tra */}
-          {deinflectHit ? (
-            <View className="gap-2" testID="dict-deinflect">
-              <View className="flex-row items-center gap-2">
-                <CornerDownRight size={16} color={theme.colors.primary} />
-                <AppText variant="subtitle" className="flex-1">
-                  {t("dict.deinflectTitle")}
-                </AppText>
-                <AppText variant="caption" numberOfLines={1}>
-                  {t("dict.deinflectFrom", { from: query })}
-                </AppText>
-              </View>
-              <ResultRow
-                hit={deinflectHit}
-                testID="dict-deinflect-result"
-                onPress={() => onOpenSense(deinflectHit)}
-              />
-            </View>
-          ) : null}
-
           {hits.length > 0 ? (
             <View className="gap-2" testID="dict-results-panel">
               <SectionHeader

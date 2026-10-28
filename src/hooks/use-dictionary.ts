@@ -13,7 +13,7 @@ import {
   searchDictionaryAnon,
 } from "@/api/dictionary";
 import { useAuth } from "@/contexts/AuthContext";
-import { detectLang, type QueryLang } from "@/lib/lang";
+import { searchLangFor, type QueryLang } from "@/lib/lang";
 import { deinflectJapanese } from "@/lib/jp-deinflect";
 import type { SearchHitDto } from "@/types/dictionary";
 
@@ -89,9 +89,10 @@ export function useDeinflectionSearch(query: string, enabled: boolean): Deinflec
 
   const results = useQueries({
     queries: candidates.map((candidate) => ({
-      queryKey: ["dictionary", "search-anon", candidate, detectLang(candidate)],
+      // Latin (romaji する) -> không giới hạn ngôn ngữ để backend tra được romaji
+      queryKey: ["dictionary", "search-anon", candidate, searchLangFor(candidate, "auto")],
       queryFn: () =>
-        searchDictionaryAnon({ q: candidate, lang: detectLang(candidate) ?? undefined }),
+        searchDictionaryAnon({ q: candidate, lang: searchLangFor(candidate, "auto") ?? undefined }),
       enabled,
       staleTime: TEN_MINUTES,
     })),

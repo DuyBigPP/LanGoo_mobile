@@ -228,13 +228,24 @@ const isTerminal = (word: string) =>
       rule.to(word.slice(0, -rule.from.length)).length > 0,
   )
 
+/** Động từ する romaji: benkyousuru / benkyoushimasu -> benkyou */
+const ROMAJI_SURU = /^([a-z]{2,}?)(shimashita|shimasen|shimasu|shinakatta|shinai|shite|shita|suru)$/i
+
+/** Danh từ する (勉強する -> 勉強): DB thường chỉ có danh từ, không có dạng động từ */
+const withSuruNoun = (word: string) =>
+  word.length > 2 && word.endsWith("する") ? [word, word.slice(0, -2)] : [word]
+
 /**
  * Trả về các thể gốc ứng viên (đã chuẩn hoá katakana -> hiragana), ưu tiên thể từ
- * điển, bỏ chuỗi còn dấu cách. Trả [] nếu không có kana (không phải tiếng Nhật).
+ * điển, bỏ chuỗi còn dấu cách. Trả [] nếu không có kana (không phải tiếng Nhật),
+ * trừ romaji động từ する (trả danh từ gốc romaji).
  */
 export function deinflectJapanese(input: string, limit = 8): string[] {
   const text = toHiragana(input.trim())
-  if (!HAS_KANA.test(text)) return []
+  if (!HAS_KANA.test(text)) {
+    const romaji = ROMAJI_SURU.exec(text)
+    return romaji ? [romaji[1]] : []
+  }
 
   interface Candidate {
     word: string
@@ -272,7 +283,7 @@ export function deinflectJapanese(input: string, limit = 8): string[] {
   }
 
   // Thể từ điển trước, rồi ưu tiên hậu tố dài (khớp cụ thể hơn), rồi chuỗi đã bỏ nhiều lớp hơn
-  return results
+  const sorted = results
     .map((entry) => ({ ...entry, terminal: isTerminal(entry.word) ? 0 : 1 }))
     .sort(
       (a, b) =>
@@ -282,5 +293,7 @@ export function deinflectJapanese(input: string, limit = 8): string[] {
         a.index - b.index,
     )
     .map((entry) => entry.word)
-    .slice(0, limit)
+  // Danh từ する xếp ngay sau động từ của nó; chính input (勉強する) cũng tính
+  const expanded = [...withSuruNoun(text).slice(1), ...sorted.flatMap(withSuruNoun)]
+  return [...new Set(expanded)].filter((word) => word !== text).slice(0, limit)
 }

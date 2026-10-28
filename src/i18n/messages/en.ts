@@ -336,8 +336,6 @@ export const en: Messages = {
     lookupTranslationDetail: "Translation details",
     lookupInPhrase: "Word in selection",
     lookupWordDetail: "Word details",
-    deinflectTitle: "Conjugated forms",
-    deinflectFrom: "from “{from}”",
     deinflectChip: "inflected",
     lookupKanjiDetail: "Kanji details",
     lookupCopy: "Copy",
